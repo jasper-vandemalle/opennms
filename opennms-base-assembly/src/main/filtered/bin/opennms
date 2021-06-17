@@ -721,6 +721,7 @@ if [ -z "$JAVA_SHORT_VERSION" ]; then
 	JAVA_SHORT_VERSION=0
 fi
 
+# JDK 9+ modules we need
 JAVA_MODULES=(
 	java.base \
 	java.compiler \
@@ -747,6 +748,20 @@ JAVA_MODULES=(
 	jdk.xml.dom \
 )
 
+# JDK 9+ modules that need public methods available to reflection
+JAVA_EXPORTS=(
+	"java.base/sun.security.x509=ALL-UNNAMED"
+)
+
+# JDK 9+ modules that need public+private methods available to reflection
+JAVA_OPENS=(
+	"java.base/java.lang=ALL-UNNAMED" \
+	"java.base/java.lang.reflect=ALL-UNNAMED" \
+	"java.base/java.text=ALL-UNNAMED" \
+	"java.base/java.util=ALL-UNNAMED" \
+	"java.desktop/java.awt.font=ALL-UNNAMED"
+)
+
 JPDA_ADDRESS="*:8001"
 JPDA_SUSPEND="n"
 if [ "$JAVA_SHORT_VERSION" -lt 9 ]; then
@@ -758,8 +773,10 @@ else
 	OIFS="$IFS"
 	IFS=","
 	ADD_MODULES="--add-modules=${JAVA_MODULES[*]}"
+	ADD_EXPORTS="--add-exports=${JAVA_EXPORTS[*]}"
+	ADD_OPENS="--add-opens=${JAVA_OPENS[*]}"
 	IFS="$OIFS"
-	JAVA_CMD=("${JAVA_CMD[@]}" "$ADD_MODULES")
+	JAVA_CMD=("${JAVA_CMD[@]}" "$ADD_MODULES" "$ADD_EXPORTS" "$ADD_OPENS")
 	# see NMS-12261 -- use backwards-compatible locale provider by default
 	JAVA_CMD+=("-Djava.locale.providers=CLDR,COMPAT")
 fi
