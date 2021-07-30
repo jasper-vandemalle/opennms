@@ -63,11 +63,11 @@ public class ConfigStoreDaoImplTest {
     @Autowired
     private ConfigStoreDao configStoreDao;
 
-    public static class FakeConvert<T> implements XmlConfigConverter {
-        private Class<T> configurationClass;
-        private ServiceSchema serviceSchema;
-        private SCHEMA_TYPE schemaType = SCHEMA_TYPE.XML;
+    public static class FakeConvert<T> implements ConfigConverter {
         public FakeConvert() {}
+
+        @Override
+        public void validate(Object obj) {}
 
         @Override
         public Object xmlToJaxbObject(String xml) {
@@ -86,6 +86,16 @@ public class ConfigStoreDaoImplTest {
 
         @Override
         public Object jsonToJaxbObject(String jsonStr) {
+            return null;
+        }
+
+        @Override
+        public String jaxbObjectToJson(Object obj) {
+            return null;
+        }
+
+        @Override
+        public String jaxbObjectToXml(Object obj) {
             return null;
         }
 

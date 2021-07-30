@@ -34,11 +34,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.IOException;
 import java.net.URL;
 
-public interface XmlConfigConverter<CONFIG_CLASS> {
-    enum SCHEMA_TYPE {XML, JSON}
+public interface ConfigConverter<CONFIG_CLASS> {
 
-    ;
+    enum SCHEMA_TYPE {XML, JSON};
 
+    void validate(CONFIG_CLASS obj);
     /**
      * convert xml into config object
      *
@@ -70,6 +70,20 @@ public interface XmlConfigConverter<CONFIG_CLASS> {
      * @return config object
      */
     CONFIG_CLASS jsonToJaxbObject(final String jsonStr);
+
+    /**
+     * convert config object to json
+     * @param obj config obj
+     * @return json string
+     */
+    public String jaxbObjectToJson(final CONFIG_CLASS obj);
+
+    /**
+     * convert config object to json
+     * @param obj config obj
+     * @return xml string
+     */
+    String jaxbObjectToXml(final CONFIG_CLASS obj);
 
     /**
      * get the configuration class register with the converter

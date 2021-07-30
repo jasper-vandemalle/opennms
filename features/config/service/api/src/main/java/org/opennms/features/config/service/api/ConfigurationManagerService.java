@@ -30,8 +30,9 @@ package org.opennms.features.config.service.api;
 
 import org.opennms.features.config.dao.api.ConfigData;
 import org.opennms.features.config.dao.api.ConfigSchema;
-import org.opennms.features.config.dao.api.XmlConfigConverter;
+import org.opennms.features.config.dao.api.ConfigConverter;
 
+import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Set;
@@ -56,10 +57,10 @@ public interface ConfigurationManagerService<CONFIG_STORE_TYPE> {
      * @throws ClassNotFoundException
      */
     <ENTITY> void registerSchema(final String serviceName, final int majorVersion, final int minorVersion,
-                                 final int patchVersion, Class<ENTITY> entityClass) throws IOException, ClassNotFoundException;
+                                 final int patchVersion, Class<ENTITY> entityClass) throws IOException, ClassNotFoundException, JAXBException;
 
     void registerSchema(final String serviceName, final int majorVersion, final int minorVersion,
-                        final int patchVersion, final XmlConfigConverter converter) throws IOException, ClassNotFoundException;
+                        final int patchVersion, final ConfigConverter converter) throws IOException, ClassNotFoundException;
 
     /**
      * Get the registered Schema

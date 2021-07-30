@@ -33,13 +33,14 @@ import org.json.JSONObject;
 import org.opennms.features.config.dao.api.ConfigData;
 import org.opennms.features.config.dao.api.ConfigSchema;
 import org.opennms.features.config.dao.api.ConfigStoreDao;
-import org.opennms.features.config.dao.api.XmlConfigConverter;
+import org.opennms.features.config.dao.api.ConfigConverter;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.opennms.features.config.service.util.ValidateUsingConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,14 +61,14 @@ public class ConfigurationManagerServiceImpl implements ConfigurationManagerServ
     @Override
     public <ENTITY> void registerSchema(final String serviceName, final int majorVersion, final int minorVersion,
                                         final int patchVersion, Class<ENTITY> entityClass)
-            throws IOException, ClassNotFoundException {
+            throws IOException, ClassNotFoundException, JAXBException {
         ValidateUsingConverter<ENTITY> converter = new ValidateUsingConverter<>(entityClass);
         this.registerSchema(serviceName, majorVersion, minorVersion, patchVersion, converter);
     }
 
     @Override
     public void registerSchema(final String serviceName, final int majorVersion, final int minorVersion,
-                               final int patchVersion, final XmlConfigConverter converter)
+                               final int patchVersion, final ConfigConverter converter)
             throws IOException, ClassNotFoundException {
         Objects.requireNonNull(serviceName);
         Objects.requireNonNull(converter);
