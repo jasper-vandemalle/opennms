@@ -38,7 +38,7 @@ public interface ConfigConverter<CONFIG_CLASS> {
 
     enum SCHEMA_TYPE {XML, JSON};
 
-    void validate(CONFIG_CLASS obj);
+    boolean validate(CONFIG_CLASS obj) throws RuntimeException;
     /**
      * convert xml into config object
      *

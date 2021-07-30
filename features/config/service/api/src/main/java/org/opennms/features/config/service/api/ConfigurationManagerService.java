@@ -28,6 +28,7 @@
 
 package org.opennms.features.config.service.api;
 
+import org.json.JSONObject;
 import org.opennms.features.config.dao.api.ConfigData;
 import org.opennms.features.config.dao.api.ConfigSchema;
 import org.opennms.features.config.dao.api.ConfigConverter;
@@ -72,26 +73,37 @@ public interface ConfigurationManagerService<CONFIG_STORE_TYPE> {
     Optional<ConfigSchema<?>> getRegisteredSchema(String serviceName) throws IOException, ClassNotFoundException;
 
     /**
-     * register a new configuration by xml
-     *
+     * register a new configuration by xml.
+     * It will make sure the configId is not duplicated !!!
      * @param serviceName
      * @param configId
      * @param xmlPath
      * @throws IOException
      */
-    <ENTITY> void registerConfiguration(final String serviceName, final String configId, final String xmlPath)
+    void registerConfiguration(final String serviceName, final String configId, final String xmlPath)
             throws IOException, ClassNotFoundException;
 
     /**
-     * register a new configuration by JSONObject
-     *
+     * register a new configuration by JSONObject.
+     * It will make sure the configId is not duplicated !!!
      * @param serviceName
      * @param configId
      * @param object
      * @throws IOException
      */
-    <ENTITY> void registerConfiguration(final String serviceName, final String configId, final CONFIG_STORE_TYPE object)
-            throws IOException;
+    <ENTITY> void registerConfiguration(String serviceName, String configId, ENTITY object, Class<ENTITY> configClass) throws IOException, ClassNotFoundException;
+
+    /**
+     * register a new configuration by JSONObject.
+     * It will make sure the configId is not duplicated !!!
+     * @param serviceName
+     * @param configId
+     * @param json
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    void registerConfiguration(final String serviceName, final String configId, final JSONObject json)
+            throws IOException, ClassNotFoundException;
 
     /**
      * remove configure from service
@@ -101,8 +113,8 @@ public interface ConfigurationManagerService<CONFIG_STORE_TYPE> {
      */
     void unregisterConfiguration(final String serviceName, final String configId) throws IOException;
 
-    boolean updateConfiguration(final String serviceName, final String configId,
-                                                    final CONFIG_STORE_TYPE object) throws IOException;
+    boolean updateConfiguration(final String serviceName, final String configId, final CONFIG_STORE_TYPE object)
+            throws IOException, ClassNotFoundException;
 
     Optional<CONFIG_STORE_TYPE> getConfiguration(final String serviceName, final String configId) throws IOException;
 

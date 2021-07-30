@@ -35,12 +35,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * It handles storing config data in database by generic datatype
+ * It also expects to do any validation before persist.
+ * @param <CONFIG_DATATYPE> data type store in database
+ */
 public interface ConfigStoreDao<CONFIG_DATATYPE> {
 
     /**
      * register service to config manager
      *
-     * @param configSchema
+     * @param configSchema schema object
      * @return status
      */
     boolean register(ConfigSchema<?> configSchema) throws IOException;
@@ -88,38 +93,38 @@ public interface ConfigStoreDao<CONFIG_DATATYPE> {
      * @param configData
      * @return status
      */
-    boolean addConfigs(String serviceName, ConfigData<CONFIG_DATATYPE> configData) throws IOException;
+    boolean addConfigs(String serviceName, ConfigData<CONFIG_DATATYPE> configData) throws IOException, ClassNotFoundException;
 
     /**
-     * add new config to a registered service name
+     * add new config to a registered service name, it will validate against schema
      *
      * @param serviceName
      * @param configId
      * @param config
      * @return status
      */
-    boolean addConfig(String serviceName, String configId, JSONObject config) throws IOException;
+    boolean addConfig(String serviceName, String configId, JSONObject config) throws IOException, ClassNotFoundException;
 
     Optional<CONFIG_DATATYPE> getConfig(String serviceName, String configId) throws IOException;
 
     /**
-     * update config to a registered service name
+     * update config to a registered service name, it will validate against schema
      *
      * @param serviceName
      * @param configId
      * @param config
      * @return status
      */
-    boolean updateConfig(String serviceName, String configId, JSONObject config) throws IOException;
+    boolean updateConfig(String serviceName, String configId, JSONObject config) throws IOException, ClassNotFoundException;
 
     /**
-     * **replace** all configs for the registered service name
+     * **replace all configs** for the registered service name, it will validate against schema
      *
      * @param serviceName
      * @param configData
      * @return status
      */
-    boolean updateConfigs(String serviceName, ConfigData<CONFIG_DATATYPE> configData) throws IOException;
+    boolean updateConfigs(String serviceName, ConfigData<CONFIG_DATATYPE> configData) throws IOException, ClassNotFoundException;
 
     /**
      * delete one config from registered service name
@@ -131,7 +136,7 @@ public interface ConfigStoreDao<CONFIG_DATATYPE> {
     boolean deleteConfig(String serviceName, String configId) throws IOException;
 
     /**
-     * deregister a service from config manager
+     * unregister a service from config manager, it will remove both schema and configs
      *
      * @param serviceName
      */
