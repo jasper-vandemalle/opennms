@@ -81,8 +81,6 @@ public class Netflow9MessageBuilder implements MessageBuilder {
         Long unixSecs = null;
         Long firstSwitched = null;
         Long lastSwitched = null;
-        Long flowStartMilliseconds = null;
-        Long flowEndMilliseconds = null;
 
 	if (this.flowSamplingIntervalFallback != null) {
 	    builder.setSamplingInterval(setDoubleValue(this.flowSamplingIntervalFallback));
@@ -235,12 +233,6 @@ public class Netflow9MessageBuilder implements MessageBuilder {
                 case "FLOW_INACTIVE_TIMEOUT":
                     flowInActiveTimeout = getLongValue(value);
                     break;
-                case "flowStartMilliseconds":
-                    flowStartMilliseconds = getLongValue(value);
-                    break;
-                case "flowEndMilliseconds":
-                    flowEndMilliseconds = getLongValue(value);
-                    break;
             }
         }
 
@@ -256,13 +248,6 @@ public class Netflow9MessageBuilder implements MessageBuilder {
             builder.setLastSwitched(setLongValue(lastSwitched + bootTime));
         }
 
-        // Some Cisco platforms also support absolute timestamps in NetFlow v9 (like defined in IPFIX). See NMS-13006
-        if (flowStartMilliseconds != null) {
-            builder.setFirstSwitched(setLongValue(flowStartMilliseconds));
-        }
-        if (flowEndMilliseconds != null) {
-            builder.setLastSwitched(setLongValue(flowEndMilliseconds));
-        }
 
         // Set Destination address and host name.
         first(ipv6DstAddress, ipv4DstAddress).ifPresent(inetAddress -> {
