@@ -25,12 +25,14 @@
 
 #nav a {
   font-family: Arial;
-  font-size: 15px;
-  font-weight: bold;
+  font-size: 14px;
+  /* font-weight: bold; */
   color: #b4b6c8;
 }
 
 #nav a.router-link-exact-active {
   font-size: 15px;
+  font-weight: bold;
+  color: #E9EBF9;
 }
 </style>

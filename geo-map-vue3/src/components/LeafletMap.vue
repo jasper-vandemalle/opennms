@@ -43,7 +43,7 @@ import {
   LPolyline,
 } from "@vue-leaflet/vue-leaflet";
 import "leaflet/dist/leaflet.css";
-import NodesService from "@/services/NodesService.js";
+// import NodesService from "@/services/NodesService.js";
 
 export default {
   components: {
@@ -84,15 +84,17 @@ export default {
   methods: {},
 
   created() {
-    NodesService.getNodes()
-      .then((response) => {
-        this.nodes = response.data;
-        console.log(response.data);
-      })
-      .catch((error) => {
-        console.log("Here is the error meassage");
-        console.log(error);
-      });
+  //   NodesService.getNodes()
+  //     .then((response) => {
+  //       this.nodes = response.data.node;
+  //       console.log(response.data);
+  //       console.log("here are the nodes");
+  //       console.log(this.nodes);
+  //     })
+  //     .catch((error) => {
+  //       console.log("Here is the error meassage");
+  //       console.log(error);
+  //     });
   },
 };
 </script>

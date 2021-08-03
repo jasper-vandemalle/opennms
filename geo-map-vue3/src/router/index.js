@@ -30,12 +30,12 @@ const routes = [
     ]
   },
   {
-    path: "/",
+    path: "/nodes",
     name: "Nodes",
     component: Nodes,
   },
   {
-    path: "/",
+    path: "/alarms",
     name: "Alarms",
     component: Alarms,
   },
