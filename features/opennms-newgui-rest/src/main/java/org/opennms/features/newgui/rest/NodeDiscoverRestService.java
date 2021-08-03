@@ -35,7 +35,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.opennms.features.newgui.rest.model.DiscoveryResultDTO;
+import org.opennms.features.newgui.rest.model.ScanResultDTO;
 import org.opennms.features.newgui.rest.model.IPAddressScanRequestDTO;
 import org.opennms.features.newgui.rest.model.SNMPFitRequestDTO;
 import org.opennms.features.newgui.rest.model.SNMPFitResultDTO;
@@ -45,7 +45,7 @@ public interface NodeDiscoverRestService {
     @POST
     @Path("/scan")
     @Produces(value = {MediaType.APPLICATION_JSON})
-    List<DiscoveryResultDTO> discoverByRange(List<IPAddressScanRequestDTO> ipRangeList);
+    List<ScanResultDTO> discoverByRange(List<IPAddressScanRequestDTO> ipRangeList);
 
     @POST
     @Path("/detect")

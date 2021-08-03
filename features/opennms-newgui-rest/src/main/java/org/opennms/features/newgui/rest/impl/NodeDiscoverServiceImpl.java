@@ -41,7 +41,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.opennms.features.newgui.rest.NodeDiscoverRestService;
-import org.opennms.features.newgui.rest.model.DiscoveryResultDTO;
+import org.opennms.features.newgui.rest.model.ScanResultDTO;
 import org.opennms.features.newgui.rest.model.FitRequest;
 import org.opennms.features.newgui.rest.model.IPAddressScanRequestDTO;
 import org.opennms.features.newgui.rest.model.IPScanResult;
@@ -70,8 +70,8 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
     }
 
     @Override
-    public List<DiscoveryResultDTO> discoverByRange(List<IPAddressScanRequestDTO> ipRangeList) {
-        List<DiscoveryResultDTO> results = new ArrayList<>();
+    public List<ScanResultDTO> discoverByRange(List<IPAddressScanRequestDTO> ipRangeList) {
+        List<ScanResultDTO> results = new ArrayList<>();
         Map<IPAddressScanRequestDTO, CompletableFuture<PingSweepSummary>> futureMap = new HashMap<>();
 
         ipRangeList.forEach(ipRange -> {
@@ -102,7 +102,7 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
                     if (summary!=null && !summary.getResponses().isEmpty()) {
                         List<IPScanResult> scanResults = new ArrayList<>();
                         summary.getResponses().forEach((address, rtt) -> scanResults.add(new IPScanResult(address.getHostName(), address.getHostAddress(), rtt)));
-                        DiscoveryResultDTO resultDTO = new DiscoveryResultDTO(key.getLocation(), scanResults);
+                        ScanResultDTO resultDTO = new ScanResultDTO(key.getLocation(), scanResults);
                         results.add(resultDTO);
                     } else {
                         LOG.info("No response from any IP address in the range of {} to {}", key.getStartIP(), key.getEndIP());

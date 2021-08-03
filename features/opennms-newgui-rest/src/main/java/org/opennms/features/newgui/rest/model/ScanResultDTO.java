@@ -30,11 +30,11 @@ package org.opennms.features.newgui.rest.model;
 
 import java.util.List;
 
-public class DiscoveryResultDTO {
+public class ScanResultDTO {
     private String location;
     private List<IPScanResult> scanResults;
 
-    public DiscoveryResultDTO(String location, List<IPScanResult> scanResults) {
+    public ScanResultDTO(String location, List<IPScanResult> scanResults) {
         this.location = location;
         this.scanResults = scanResults;
     }
