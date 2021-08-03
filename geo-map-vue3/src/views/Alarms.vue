@@ -121,7 +121,7 @@ export default {
           uei: alarm.uei,
           count: alarm.count,
           lastEventTime: alarm.lastEvent.time,
-          logMessage: alarm.log,
+          logMessage: alarm.logMessage,
         }));
       })
       .catch((error) => {
