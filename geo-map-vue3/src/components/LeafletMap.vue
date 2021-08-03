@@ -12,13 +12,13 @@
       <l-control-layers />
 
       <l-marker :lat-lng="marker1latlng">
-        <l-icon :icon-url="iconUrl" :icon-size="iconSize" />
+        <!-- <l-icon :icon-url="iconUrl" :icon-size="iconSize" /> -->
         <l-popup> popup1 </l-popup>
         <l-tooltip> tooltip1 </l-tooltip>
       </l-marker>
 
       <l-marker :lat-lng="marker2">
-        <l-icon :icon-url="iconUrl" :icon-size="iconSize" />
+        <!-- <l-icon :icon-url="iconUrl" :icon-size="iconSize" /> -->
         <l-popup> popup2 </l-popup>
         <l-tooltip> tooltip2 </l-tooltip>
       </l-marker>
@@ -36,7 +36,7 @@ import {
   LMap,
   LTileLayer,
   LMarker,
-  LIcon,
+  // LIcon,
   LControlLayers,
   LTooltip,
   LPopup,
@@ -50,7 +50,7 @@ export default {
     LMap,
     LTileLayer,
     LMarker,
-    LIcon,
+    // LIcon,
     LControlLayers,
     LTooltip,
     LPopup,
@@ -60,20 +60,20 @@ export default {
     return {
       zoom: 4,
       openNMSHeadQuarter: [35.849613, -78.794882],
-      iconWidth: 25,
-      iconHeight: 25,
+      // iconWidth: 25,
+      // iconHeight: 25,
       nodes: null,
       marker1: [35.849613, -78.794882],
       marker2: [45.448795, -75.688529],
     };
   },
   computed: {
-    iconUrl: function () {
-      return require("../assets/node.png");
-    },
-    iconSize: function () {
-      return [this.iconWidth, this.iconHeight];
-    },
+    // iconUrl: function () {
+    //   return require("../assets/node.png");
+    // },
+    // iconSize: function () {
+    //   return [this.iconWidth, this.iconHeight];
+    // },
     marker1latlng: function () {
       return [35.849613, -78.794882];
     },
@@ -84,17 +84,7 @@ export default {
   methods: {},
 
   created() {
-  //   NodesService.getNodes()
-  //     .then((response) => {
-  //       this.nodes = response.data.node;
-  //       console.log(response.data);
-  //       console.log("here are the nodes");
-  //       console.log(this.nodes);
-  //     })
-  //     .catch((error) => {
-  //       console.log("Here is the error meassage");
-  //       console.log(error);
-  //     });
+
   },
 };
 </script>

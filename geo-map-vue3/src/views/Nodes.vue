@@ -153,7 +153,6 @@ export default {
         }));
       })
       .catch((error) => {
-        console.log("Here is the error meassage");
         console.log(error);
       });
   },

@@ -32,7 +32,6 @@ export default {
 
 <style scoped>
 #map-pane-under {
-
   text-align: left;
 }
 
