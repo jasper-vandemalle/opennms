@@ -100,7 +100,6 @@ public class JsonConfigStoreDaoImpl implements ConfigStoreDao<JSONObject> {
         String className = (String) json.get("converterClass");
         Class<?> converterClass = Class.forName(className);
         JavaType javaType = mapper.getTypeFactory().constructParametricType(ConfigSchema.class, converterClass);
-        System.out.println(javaType);
         ConfigSchema<?> schema = (ConfigSchema) mapper.readValue(jsonStr.get(), javaType);
         return Optional.ofNullable(schema);
     }
