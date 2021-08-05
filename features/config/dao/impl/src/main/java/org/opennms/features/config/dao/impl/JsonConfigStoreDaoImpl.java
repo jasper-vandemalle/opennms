@@ -52,7 +52,7 @@ import java.util.Set;
 public class JsonConfigStoreDaoImpl implements ConfigStoreDao<JSONObject> {
     private static final Logger LOG = LoggerFactory.getLogger(ConfigStoreDao.class);
     public static final String CONTEXT_CONFIG = "CM_CONFIG";
-    public static final String CONTEXT_META = "CM_META";
+    public static final String CONTEXT_SCHEMA = "CM_SCHEMA";
     private final ObjectMapper mapper;
 
     private final JsonStore jsonStore;
@@ -68,13 +68,13 @@ public class JsonConfigStoreDaoImpl implements ConfigStoreDao<JSONObject> {
 
     @Override
     public boolean register(ConfigSchema<?> configSchema) throws IOException {
-        long timestamp = jsonStore.put(configSchema.getName(), mapper.writeValueAsString(configSchema), CONTEXT_META);
+        long timestamp = jsonStore.put(configSchema.getName(), mapper.writeValueAsString(configSchema), CONTEXT_SCHEMA);
         return timestamp > 0;
     }
 
     @Override
     public Optional<Set<String>> getServiceIds() {
-        return this.getIds(CONTEXT_META);
+        return this.getIds(CONTEXT_SCHEMA);
     }
 
     @Override
@@ -92,7 +92,7 @@ public class JsonConfigStoreDaoImpl implements ConfigStoreDao<JSONObject> {
 
     @Override
     public Optional<ConfigSchema<?>> getConfigSchema(String serviceName) throws IOException, ClassNotFoundException {
-        Optional<String> jsonStr = jsonStore.get(serviceName, CONTEXT_META);
+        Optional<String> jsonStr = jsonStore.get(serviceName, CONTEXT_SCHEMA);
         if (jsonStr.isEmpty()) {
             return Optional.empty();
         }
@@ -197,7 +197,7 @@ public class JsonConfigStoreDaoImpl implements ConfigStoreDao<JSONObject> {
 
     @Override
     public void unregister(String serviceName) {
-        jsonStore.delete(serviceName, CONTEXT_META);
+        jsonStore.delete(serviceName, CONTEXT_SCHEMA);
         jsonStore.delete(serviceName, CONTEXT_CONFIG);
     }
 
@@ -211,7 +211,7 @@ public class JsonConfigStoreDaoImpl implements ConfigStoreDao<JSONObject> {
     }
 
     private boolean putSchema(ConfigSchema<?> configSchema) throws IOException {
-        long timestamp = jsonStore.put(configSchema.getName(), mapper.writeValueAsString(configSchema), CONTEXT_META);
+        long timestamp = jsonStore.put(configSchema.getName(), mapper.writeValueAsString(configSchema), CONTEXT_SCHEMA);
         return timestamp > 0;
     }
 
