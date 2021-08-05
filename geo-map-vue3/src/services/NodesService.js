@@ -6,7 +6,8 @@ export default {
       auth: {
         username: 'admin',
         password: 'admin'
-      }
+      },
+      params: { limit: 500 }
     })
   }
 }
