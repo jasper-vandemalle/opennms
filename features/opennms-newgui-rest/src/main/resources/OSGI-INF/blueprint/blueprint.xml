@@ -10,7 +10,6 @@
     <reference id="locationAwarePingClient" interface="org.opennms.netmgt.icmp.proxy.LocationAwarePingClient"
                availability="mandatory"/>
     <reference id="requisitionService" interface="org.opennms.web.svclayer.api.RequisitionAccessService" />
-    <reference id="discoveryConfigFactory" interface="org.opennms.netmgt.config.api.DiscoveryConfigurationFactory"/>
     <reference id="eventForwarder" interface="org.opennms.netmgt.events.api.EventForwarder"/>
 
     <!-- The state manager will manually pull properties from the configuration file -->
@@ -18,7 +17,6 @@
         <argument ref="locationAwarePingClient"/>
         <argument ref="locationAwareSnmpClient"/>
         <argument ref="requisitionService" />
-        <argument ref="discoveryConfigFactory" />
         <argument ref="eventForwarder" />
     </bean>
     <service interface="org.opennms.features.newgui.rest.NodeDiscoverRestService" ref="nodeDiscoverRestService">

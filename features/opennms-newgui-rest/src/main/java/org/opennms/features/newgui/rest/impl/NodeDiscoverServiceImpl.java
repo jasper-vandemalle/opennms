@@ -59,7 +59,6 @@ import org.opennms.features.newgui.rest.model.ScanResultDTO;
 import org.opennms.netmgt.config.DiscoveryConfigFactory;
 import org.opennms.netmgt.config.SnmpEventInfo;
 import org.opennms.netmgt.config.SnmpPeerFactory;
-import org.opennms.netmgt.config.api.DiscoveryConfigurationFactory;
 import org.opennms.netmgt.config.discovery.DiscoveryConfiguration;
 import org.opennms.netmgt.config.discovery.IncludeRange;
 import org.opennms.netmgt.events.api.EventConstants;
@@ -81,7 +80,6 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
     private final LocationAwarePingClient locationAwarePingClient;
     private final LocationAwareSnmpClient locationAwareSnmpClient;
     private RequisitionAccessService requisitionService;
-    private DiscoveryConfigurationFactory discoveryConfigFactory;
     private EventForwarder eventForwarder;
 
     private static final String DEFAULT_SYS_OBJECTID_INSTANCE = ".1.3.6.1.2.1.1.2.0";
@@ -89,12 +87,10 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
     public NodeDiscoverServiceImpl(LocationAwarePingClient locationAwarePingClient,
                                    LocationAwareSnmpClient locationAwareSnmpClient,
                                    RequisitionAccessService requisitionService,
-                                   DiscoveryConfigFactory discoveryConfigFactory,
                                    EventForwarder eventForwarder) {
         this.locationAwarePingClient = locationAwarePingClient;
         this.locationAwareSnmpClient = locationAwareSnmpClient;
         this.requisitionService = requisitionService;
-        this.discoveryConfigFactory = discoveryConfigFactory;
         this.eventForwarder = eventForwarder;
     }
 
@@ -272,17 +268,16 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
     private void provisionDiscoverConfig(List<IPAddressScanRequestDTO> ipScanList, String requisition) {
         CompletableFuture.runAsync(() -> {
             try {
+                DiscoveryConfigFactory discoveryConfigFactory = new DiscoveryConfigFactory();
                 DiscoveryConfiguration discoveryConfig = discoveryConfigFactory.getConfiguration();
                 discoveryConfig.setForeignSource(requisition);
                 discoveryConfig.setInitialSleepTime(2000L);
                 discoveryConfig.setRestartSleepTime(86400000L);
-                ipScanList.forEach(ips ->{
-                    discoveryConfig.addIncludeRange(createIncludeRange(ips, requisition));
-                });
+                ipScanList.forEach(ips -> discoveryConfig.addIncludeRange(createIncludeRange(ips, requisition)));
                 StringWriter writer = new StringWriter();
                 JaxbUtils.marshal(discoveryConfig, writer);
                 LOG.debug("Writing discovery config {}", writer.toString().trim());
-                ((DiscoveryConfigFactory)discoveryConfigFactory).saveConfiguration(discoveryConfig);
+                discoveryConfigFactory.saveConfiguration(discoveryConfig);
                 EventBuilder builder = new EventBuilder(EventConstants.DISCOVERYCONFIG_CHANGED_EVENT_UEI, "REST");
                 builder.addParam(EventConstants.PARM_DAEMON_NAME, "Discovery");
                 eventForwarder.sendNow(builder.getEvent());
