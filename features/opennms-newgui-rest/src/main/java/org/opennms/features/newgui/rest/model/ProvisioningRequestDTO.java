@@ -28,43 +28,54 @@
 
 package org.opennms.features.newgui.rest.model;
 
+import java.util.Date;
 import java.util.List;
 
-public class SNMPFitRequestDTO {
-    private String location;
-    private List<String> ipAddresses;
-    private List<SNMConfigDTO> configurations;
+public class ProvisioningRequestDTO {
+    private String batchName;
+    private Date scheduleTime;
+    private List<IPAddressScanRequestDTO> discoverIPRanges;
+    private List<SNMPFitRequestDTO> snmpConfigList;
 
-    public String getLocation() {
-        return location;
+    public String getBatchName() {
+        return batchName;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setBatchName(String batchName) {
+        this.batchName = batchName;
     }
 
-    public List<String> getIpAddresses() {
-        return ipAddresses;
+    public List<IPAddressScanRequestDTO> getDiscoverIPRanges() {
+        return discoverIPRanges;
     }
 
-    public void setIpAddresses(List<String> ipAddresses) {
-        this.ipAddresses = ipAddresses;
+    public void setDiscoverIPRanges(List<IPAddressScanRequestDTO> discoverIPRanges) {
+        this.discoverIPRanges = discoverIPRanges;
     }
 
-    public List<SNMConfigDTO> getConfigurations() {
-        return configurations;
+    public List<SNMPFitRequestDTO> getSnmpConfigList() {
+        return snmpConfigList;
     }
 
-    public void setConfigurations(List<SNMConfigDTO> configurations) {
-        this.configurations = configurations;
+    public void setSnmpConfigList(List<SNMPFitRequestDTO> snmpConfigList) {
+        this.snmpConfigList = snmpConfigList;
+    }
+
+    public Date getScheduleTime() {
+        return scheduleTime;
+    }
+
+    public void setScheduleTime(Date scheduleTime) {
+        this.scheduleTime = scheduleTime;
     }
 
     @Override
     public String toString() {
-        return "SNMPFitRequestDTO{" +
-                "location='" + location + '\'' +
-                ", ipAddresses=" + ipAddresses +
-                ", configurations=" + configurations +
+        return "ProvisioningRequestDTO{" +
+                "batchName='" + batchName + '\'' +
+                ", scheduleTime=" + scheduleTime +
+                ", discoverIPRanges=" + discoverIPRanges +
+                ", snmpConfigList=" + snmpConfigList +
                 '}';
     }
 }

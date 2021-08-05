@@ -34,7 +34,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
+import org.opennms.features.newgui.rest.model.ProvisioningRequestDTO;
 import org.opennms.features.newgui.rest.model.ScanResultDTO;
 import org.opennms.features.newgui.rest.model.IPAddressScanRequestDTO;
 import org.opennms.features.newgui.rest.model.SNMPFitRequestDTO;
@@ -51,4 +53,9 @@ public interface NodeDiscoverRestService {
     @Path("/detect")
     @Produces(value = {MediaType.APPLICATION_JSON})
     List<SNMPFitResultDTO> fitSNMP(List<SNMPFitRequestDTO> requestList);
+
+    @POST
+    @Path("/provision")
+    @Produces(value = {MediaType.APPLICATION_JSON})
+    Response provision(ProvisioningRequestDTO requestDTO);
 }

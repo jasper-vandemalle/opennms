@@ -28,6 +28,8 @@
 
 package org.opennms.features.newgui.rest.impl;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -39,20 +41,38 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.xml.bind.ValidationException;
+
 import org.apache.commons.lang3.StringUtils;
+import org.opennms.core.utils.LocationUtils;
+import org.opennms.core.xml.JaxbUtils;
 import org.opennms.features.newgui.rest.NodeDiscoverRestService;
-import org.opennms.features.newgui.rest.model.ScanResultDTO;
 import org.opennms.features.newgui.rest.model.FitRequest;
 import org.opennms.features.newgui.rest.model.IPAddressScanRequestDTO;
 import org.opennms.features.newgui.rest.model.IPScanResult;
+import org.opennms.features.newgui.rest.model.ProvisioningRequestDTO;
 import org.opennms.features.newgui.rest.model.SNMPFitRequestDTO;
 import org.opennms.features.newgui.rest.model.SNMPFitResultDTO;
+import org.opennms.features.newgui.rest.model.ScanResultDTO;
+import org.opennms.netmgt.config.DiscoveryConfigFactory;
+import org.opennms.netmgt.config.SnmpEventInfo;
+import org.opennms.netmgt.config.SnmpPeerFactory;
+import org.opennms.netmgt.config.api.DiscoveryConfigurationFactory;
+import org.opennms.netmgt.config.discovery.DiscoveryConfiguration;
+import org.opennms.netmgt.config.discovery.IncludeRange;
+import org.opennms.netmgt.events.api.EventConstants;
+import org.opennms.netmgt.events.api.EventForwarder;
 import org.opennms.netmgt.icmp.proxy.LocationAwarePingClient;
 import org.opennms.netmgt.icmp.proxy.PingSweepSummary;
+import org.opennms.netmgt.model.events.EventBuilder;
+import org.opennms.netmgt.provision.persist.requisition.Requisition;
 import org.opennms.netmgt.snmp.SnmpAgentConfig;
 import org.opennms.netmgt.snmp.SnmpObjId;
 import org.opennms.netmgt.snmp.SnmpValue;
 import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
+import org.opennms.web.svclayer.api.RequisitionAccessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,13 +80,22 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
     private static final Logger LOG = LoggerFactory.getLogger(NodeDiscoverServiceImpl.class);
     private final LocationAwarePingClient locationAwarePingClient;
     private final LocationAwareSnmpClient locationAwareSnmpClient;
+    private RequisitionAccessService requisitionService;
+    private DiscoveryConfigurationFactory discoveryConfigFactory;
+    private EventForwarder eventForwarder;
 
     private static final String DEFAULT_SYS_OBJECTID_INSTANCE = ".1.3.6.1.2.1.1.2.0";
 
     public NodeDiscoverServiceImpl(LocationAwarePingClient locationAwarePingClient,
-                                   LocationAwareSnmpClient locationAwareSnmpClient) {
+                                   LocationAwareSnmpClient locationAwareSnmpClient,
+                                   RequisitionAccessService requisitionService,
+                                   DiscoveryConfigFactory discoveryConfigFactory,
+                                   EventForwarder eventForwarder) {
         this.locationAwarePingClient = locationAwarePingClient;
         this.locationAwareSnmpClient = locationAwareSnmpClient;
+        this.requisitionService = requisitionService;
+        this.discoveryConfigFactory = discoveryConfigFactory;
+        this.eventForwarder = eventForwarder;
     }
 
     @Override
@@ -80,7 +109,7 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
                 CompletableFuture<PingSweepSummary> future = locationAwarePingClient.sweep().withRange(InetAddress.getByName(ipRange.getStartIP()), InetAddress.getByName(ipRange.getEndIP()))
                         .withLocation(ipRange.getLocation())
                         .execute().handle((v, t) -> {
-                            if(t != null) {
+                            if (t != null) {
                                 LOG.debug("Error happened during scan ip range from {}, {} with location {}",
                                         ipRange.getStartIP(), ipRange.getEndIP(), ipRange.getLocation());
                             }
@@ -99,7 +128,7 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
                 combinedFuture.get(1, TimeUnit.SECONDS);
                 for (IPAddressScanRequestDTO key : futureMap.keySet()) {
                     PingSweepSummary summary = futureMap.get(key).get();
-                    if (summary!=null && !summary.getResponses().isEmpty()) {
+                    if (summary != null && !summary.getResponses().isEmpty()) {
                         List<IPScanResult> scanResults = new ArrayList<>();
                         summary.getResponses().forEach((address, rtt) -> scanResults.add(new IPScanResult(address.getHostName(), address.getHostAddress(), rtt)));
                         ScanResultDTO resultDTO = new ScanResultDTO(key.getLocation(), scanResults);
@@ -129,19 +158,18 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
                 InetAddress inetAddress = InetAddress.getByName(r.getIpAddress());
                 SnmpAgentConfig agentConfig = new SnmpAgentConfig();
                 agentConfig.setAddress(inetAddress);
-                if(StringUtils.isNotEmpty(r.getConfig().getCommunityString())) {
+                if (StringUtils.isNotEmpty(r.getConfig().getCommunityString())) {
                     agentConfig.setWriteCommunity(r.getConfig().getCommunityString());
-                    agentConfig.setReadCommunity(r.getConfig().getCommunityString());
                 }
                 agentConfig.setSecurityLevel(SnmpAgentConfig.DEFAULT_SECURITY_LEVEL);
                 agentConfig.setRetries(r.getConfig().getRetry());
                 agentConfig.setTimeout(r.getConfig().getTimeout());
                 CompletableFuture<SnmpValue> future = locationAwareSnmpClient.get(agentConfig, objId)
                         .withLocation(r.getLocation())
-                        .execute().handle((v, t)-> {
-                            if(t != null) {
+                        .execute().handle((v, t) -> {
+                            if (t != null) {
                                 LOG.debug("Error happened when detect SNMP: location {}, IP {}, community string {}, " +
-                                        "security Leve {}", r.getLocation(), r.getIpAddress(),
+                                                "security Leve {}", r.getLocation(), r.getIpAddress(),
                                         r.getConfig().getCommunityString(), r.getConfig().getSecurityLevel());
                             }
                             return v;
@@ -151,7 +179,6 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
                 e.printStackTrace();
             }
         });
-
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureMap.values().toArray(new CompletableFuture[0]));
         while (true) {
             try {
@@ -178,6 +205,101 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
             }
         }
         return results;
+    }
+
+    @Override
+    public Response provision(ProvisioningRequestDTO requestDTO) {
+        try {
+            createRequisition(requestDTO.getBatchName());
+            provisionSNMPConfig(requestDTO.getSnmpConfigList());
+            provisionDiscoverConfig(requestDTO.getDiscoverIPRanges(), requestDTO.getBatchName());
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST.getStatusCode(), "Failed to create batch with data " + requestDTO.toString()).build();
+        }
+        return Response.ok("Provisioning request submitted succeed", MediaType.APPLICATION_JSON_TYPE).build();
+    }
+
+    private void createRequisition(String requisitionName) {
+        CompletableFuture.runAsync(() -> {
+            Requisition requisition = new Requisition();
+            requisition.setForeignSource(requisitionName);
+            try {
+                requisition.validate();
+            } catch (ValidationException e) {
+                LOG.error("Invalid requisition name {}", requisitionName);
+                throw new RuntimeException(e);
+            }
+            LOG.debug("Adding requisition {}", requisitionName);
+            requisitionService.addOrReplaceRequisition(requisition);
+        });
+
+    }
+
+    private void provisionSNMPConfig(List<SNMPFitRequestDTO> fitRequestDTOList) {
+        CompletableFuture.runAsync(() -> {
+            buildRequestFromDTO(fitRequestDTOList)
+                    .forEach(fitRq -> {
+                        try {
+                            SnmpPeerFactory.getInstance().define(createEventInfo(fitRq));
+                        } catch (UnknownHostException e) {
+                            LOG.error("Can't create SNMP config for {} ", fitRq);
+                        }
+                    });
+            try {
+                SnmpPeerFactory.getInstance().saveCurrent();
+            } catch (IOException e) {
+                throw new RuntimeException("Couldn't save the SNMP config file");
+            }
+        });
+    }
+
+    private SnmpEventInfo createEventInfo(FitRequest fitRequest) throws UnknownHostException {
+        SnmpEventInfo eventInfo = new SnmpEventInfo();
+        eventInfo.setFirstIPAddress(fitRequest.getIpAddress());
+        eventInfo.setLocation(StringUtils.isNotEmpty(fitRequest.getLocation()) ? fitRequest.getLocation(): LocationUtils.DEFAULT_LOCATION_NAME);
+        String communityStr = fitRequest.getConfig().getCommunityString();
+        eventInfo.setReadCommunityString(StringUtils.isNotEmpty(communityStr)? communityStr: "public");
+        eventInfo.setWriteCommunityString("private");
+        int timeOut = fitRequest.getConfig().getTimeout();
+        int retries = fitRequest.getConfig().getRetry();
+        int securityLevel = fitRequest.getConfig().getSecurityLevel();
+        eventInfo.setTimeout(timeOut> 0? timeOut: 300);
+        eventInfo.setRetryCount(retries > 0? retries: 1);
+        eventInfo.setSecurityLevel(securityLevel>=0 && securityLevel<=3 ? securityLevel: SnmpAgentConfig.DEFAULT_SECURITY_LEVEL);
+        return eventInfo;
+    }
+
+    private void provisionDiscoverConfig(List<IPAddressScanRequestDTO> ipScanList, String requisition) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                DiscoveryConfiguration discoveryConfig = discoveryConfigFactory.getConfiguration();
+                discoveryConfig.setForeignSource(requisition);
+                discoveryConfig.setInitialSleepTime(2000L);
+                discoveryConfig.setRestartSleepTime(86400000L);
+                ipScanList.forEach(ips ->{
+                    discoveryConfig.addIncludeRange(createIncludeRange(ips, requisition));
+                });
+                StringWriter writer = new StringWriter();
+                JaxbUtils.marshal(discoveryConfig, writer);
+                LOG.debug("Writing discovery config {}", writer.toString().trim());
+                ((DiscoveryConfigFactory)discoveryConfigFactory).saveConfiguration(discoveryConfig);
+                EventBuilder builder = new EventBuilder(EventConstants.DISCOVERYCONFIG_CHANGED_EVENT_UEI, "REST");
+                builder.addParam(EventConstants.PARM_DAEMON_NAME, "Discovery");
+                eventForwarder.sendNow(builder.getEvent());
+            } catch (IOException e) {
+                LOG.error("Failed on creating discover config {}", ipScanList, e);
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    private IncludeRange createIncludeRange(IPAddressScanRequestDTO scanRequest, String requisition) {
+        IncludeRange range = new IncludeRange();
+        range.setForeignSource(requisition);
+        range.setBegin(scanRequest.getStartIP());
+        range.setEnd(scanRequest.getEndIP());
+        range.setLocation(StringUtils.isNotEmpty(scanRequest.getLocation())? scanRequest.getLocation(): LocationUtils.DEFAULT_LOCATION_NAME);
+        return range;
     }
 
     private List<FitRequest> buildRequestFromDTO(List<SNMPFitRequestDTO> requestData) {

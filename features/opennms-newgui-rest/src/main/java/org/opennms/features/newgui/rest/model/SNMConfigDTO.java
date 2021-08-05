@@ -65,4 +65,15 @@ public class SNMConfigDTO {
     public void setSecurityLevel(int securityLevel) {
         this.securityLevel = securityLevel;
     }
+
+
+    @Override
+    public String toString() {
+        return "SNMConfigDTO{" +
+                "communityString='" + communityString + '\'' +
+                ", timeout=" + timeout +
+                ", retry=" + retry +
+                ", securityLevel=" + securityLevel +
+                '}';
+    }
 }

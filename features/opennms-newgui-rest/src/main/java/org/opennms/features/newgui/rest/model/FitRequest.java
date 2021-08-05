@@ -62,4 +62,14 @@ public class FitRequest {
     public void setConfig(SNMConfigDTO config) {
         this.config = config;
     }
+
+
+    @Override
+    public String toString() {
+        return "FitRequest{" +
+                "location='" + location + '\'' +
+                ", ipAddress='" + ipAddress + '\'' +
+                ", config=" + config +
+                '}';
+    }
 }

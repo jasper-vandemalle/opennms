@@ -71,4 +71,14 @@ public class IPAddressScanRequestDTO {
     public int hashCode() {
         return Objects.hash(location, startIP, endIP);
     }
+
+
+    @Override
+    public String toString() {
+        return "IPAddressScanRequestDTO{" +
+                "location='" + location + '\'' +
+                ", startIP='" + startIP + '\'' +
+                ", endIP='" + endIP + '\'' +
+                '}';
+    }
 }
