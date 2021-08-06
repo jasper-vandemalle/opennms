@@ -28,12 +28,11 @@
 
 package org.opennms.features.newgui.rest.model;
 
-import java.util.Date;
 import java.util.List;
 
 public class ProvisioningRequestDTO {
     private String batchName;
-    private Date scheduleTime;
+    private long scheduleTime;
     private List<IPAddressScanRequestDTO> discoverIPRanges;
     private List<SNMPFitRequestDTO> snmpConfigList;
 
@@ -61,11 +60,11 @@ public class ProvisioningRequestDTO {
         this.snmpConfigList = snmpConfigList;
     }
 
-    public Date getScheduleTime() {
+    public long getScheduleTime() {
         return scheduleTime;
     }
 
-    public void setScheduleTime(Date scheduleTime) {
+    public void setScheduleTime(long scheduleTime) {
         this.scheduleTime = scheduleTime;
     }
 

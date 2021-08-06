@@ -28,10 +28,16 @@
 
 package org.opennms.features.newgui.rest.impl;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +51,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.ValidationException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.opennms.core.utils.ConfigFileConstants;
 import org.opennms.core.utils.LocationUtils;
 import org.opennms.core.xml.JaxbUtils;
 import org.opennms.features.newgui.rest.NodeDiscoverRestService;
@@ -205,14 +213,10 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
 
     @Override
     public Response provision(ProvisioningRequestDTO requestDTO) {
-        try {
-            createRequisition(requestDTO.getBatchName());
-            provisionSNMPConfig(requestDTO.getSnmpConfigList());
-            provisionDiscoverConfig(requestDTO.getDiscoverIPRanges(), requestDTO.getBatchName());
-        } catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST.getStatusCode(), "Failed to create batch with data " + requestDTO.toString()).build();
-        }
-        return Response.ok("Provisioning request submitted succeed", MediaType.APPLICATION_JSON_TYPE).build();
+        createRequisition(requestDTO.getBatchName());
+        provisionSNMPConfig(requestDTO.getSnmpConfigList());
+        provisionDiscoverConfig(requestDTO.getDiscoverIPRanges(), requestDTO.getBatchName());
+        return Response.ok("Provisioning request was submitted succeed.", MediaType.APPLICATION_JSON_TYPE).build();
     }
 
     private void createRequisition(String requisitionName) {
@@ -244,7 +248,7 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
             try {
                 SnmpPeerFactory.getInstance().saveCurrent();
             } catch (IOException e) {
-                throw new RuntimeException("Couldn't save the SNMP config file");
+                LOG.error("Couldn't save the SNMP config file", e);
             }
         });
     }
@@ -252,38 +256,38 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
     private SnmpEventInfo createEventInfo(FitRequest fitRequest) throws UnknownHostException {
         SnmpEventInfo eventInfo = new SnmpEventInfo();
         eventInfo.setFirstIPAddress(fitRequest.getIpAddress());
-        eventInfo.setLocation(StringUtils.isNotEmpty(fitRequest.getLocation()) ? fitRequest.getLocation(): LocationUtils.DEFAULT_LOCATION_NAME);
+        eventInfo.setLocation(StringUtils.isNotEmpty(fitRequest.getLocation()) ? fitRequest.getLocation() : LocationUtils.DEFAULT_LOCATION_NAME);
         String communityStr = fitRequest.getConfig().getCommunityString();
-        eventInfo.setReadCommunityString(StringUtils.isNotEmpty(communityStr)? communityStr: "public");
+        eventInfo.setReadCommunityString(StringUtils.isNotEmpty(communityStr) ? communityStr : "public");
         eventInfo.setWriteCommunityString("private");
         int timeOut = fitRequest.getConfig().getTimeout();
         int retries = fitRequest.getConfig().getRetry();
         int securityLevel = fitRequest.getConfig().getSecurityLevel();
-        eventInfo.setTimeout(timeOut> 0? timeOut: 300);
-        eventInfo.setRetryCount(retries > 0? retries: 1);
-        eventInfo.setSecurityLevel(securityLevel>=0 && securityLevel<=3 ? securityLevel: SnmpAgentConfig.DEFAULT_SECURITY_LEVEL);
+        eventInfo.setTimeout(timeOut > 0 ? timeOut : 300);
+        eventInfo.setRetryCount(retries > 0 ? retries : 1);
+        eventInfo.setSecurityLevel(securityLevel >= 0 && securityLevel <= 3 ? securityLevel : SnmpAgentConfig.DEFAULT_SECURITY_LEVEL);
         return eventInfo;
     }
 
     private void provisionDiscoverConfig(List<IPAddressScanRequestDTO> ipScanList, String requisition) {
         CompletableFuture.runAsync(() -> {
             try {
-                DiscoveryConfigFactory discoveryConfigFactory = new DiscoveryConfigFactory();
-                DiscoveryConfiguration discoveryConfig = discoveryConfigFactory.getConfiguration();
+                //TODO ideally we should use DiscoveryConfigFactory for discovery config file operation. However it doesn't work.
+                DiscoveryConfiguration discoveryConfig = readConfig();
                 discoveryConfig.setForeignSource(requisition);
                 discoveryConfig.setInitialSleepTime(2000L);
                 discoveryConfig.setRestartSleepTime(86400000L);
+                discoveryConfig.setPacketsPerSecond(DiscoveryConfigFactory.DEFAULT_PACKETS_PER_SECOND);
                 ipScanList.forEach(ips -> discoveryConfig.addIncludeRange(createIncludeRange(ips, requisition)));
                 StringWriter writer = new StringWriter();
                 JaxbUtils.marshal(discoveryConfig, writer);
                 LOG.debug("Writing discovery config {}", writer.toString().trim());
-                discoveryConfigFactory.saveConfiguration(discoveryConfig);
+                saveConfig(writer.toString().trim());
                 EventBuilder builder = new EventBuilder(EventConstants.DISCOVERYCONFIG_CHANGED_EVENT_UEI, "REST");
                 builder.addParam(EventConstants.PARM_DAEMON_NAME, "Discovery");
                 eventForwarder.sendNow(builder.getEvent());
-            } catch (IOException e) {
+            } catch (Exception e) {
                 LOG.error("Failed on creating discover config {}", ipScanList, e);
-                throw new RuntimeException(e);
             }
         });
     }
@@ -293,7 +297,7 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
         range.setForeignSource(requisition);
         range.setBegin(scanRequest.getStartIP());
         range.setEnd(scanRequest.getEndIP());
-        range.setLocation(StringUtils.isNotEmpty(scanRequest.getLocation())? scanRequest.getLocation(): LocationUtils.DEFAULT_LOCATION_NAME);
+        range.setLocation(StringUtils.isNotEmpty(scanRequest.getLocation()) ? scanRequest.getLocation() : LocationUtils.DEFAULT_LOCATION_NAME);
         return range;
     }
 
@@ -301,5 +305,25 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
         List<FitRequest> list = new ArrayList<>();
         requestData.forEach(r -> r.getIpAddresses().forEach(ip -> r.getConfigurations().forEach(config -> list.add(new FitRequest(r.getLocation(), ip, config)))));
         return list;
+    }
+
+    private synchronized DiscoveryConfiguration readConfig() throws IOException {
+        File cfgFile = ConfigFileConstants.getFile(ConfigFileConstants.DISCOVERY_CONFIG_FILE_NAME);
+        LOG.debug("reload: config file path {}", cfgFile.getPath());
+        return JaxbUtils.unmarshal(DiscoveryConfiguration.class, new FileInputStream(cfgFile));
+    }
+
+    private synchronized void saveConfig(String xml) throws IOException {
+        if(StringUtils.isNotEmpty(xml)) {
+            Writer writer = null;
+            try {
+                writer = new OutputStreamWriter(new FileOutputStream(ConfigFileConstants.getFile(ConfigFileConstants.DISCOVERY_CONFIG_FILE_NAME)), StandardCharsets.UTF_8);
+                writer.write(xml);
+            } finally {
+                if(writer != null) {
+                    IOUtils.close(writer);
+                }
+            }
+        }
     }
 }
