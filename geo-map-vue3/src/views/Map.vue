@@ -25,7 +25,6 @@ export default {
     LeafletMap,
     Splitpanes,
     Pane,
-
   },
 };
 </script>

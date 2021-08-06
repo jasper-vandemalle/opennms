@@ -1,15 +1,24 @@
 <template>
-  <div class="nodes">
-    <ag-grid-vue
-      style="width: 100%; height: 700px"
-      class="ag-theme-alpine"
-      rowSelection="multiple"
-      :columnDefs="columnDefs"
-      :rowData="rowData"
-      :defaultColDef="defaultColDef"
-      :gridOptions="gridOptions"
-    >
-    </ag-grid-vue>
+  <div class="map-nodes">
+    <div class="button-group">
+      <span class="buttons">
+        <button v-on:click="clearFilters()">Clear Filters</button>
+        <button v-on:click="clearFilters()">Show Topology</button>
+        <button v-on:click="syncMap()">Sync</button>
+      </span>
+    </div>
+    <div class="map-nodes-grid">
+      <ag-grid-vue
+        style="width: 100%; height: 600px"
+        class="ag-theme-alpine"
+        rowSelection="multiple"
+        :columnDefs="columnDefs"
+        :rowData="rowData"
+        :defaultColDef="defaultColDef"
+        :gridOptions="gridOptions"
+      >
+      </ag-grid-vue>
+    </div>
   </div>
 </template>
 
@@ -24,7 +33,7 @@ export default {
       gridOptions: null,
       gridApi: null,
       columnDefs: null,
-      rowData: [],
+      rowData: null,
       defaultColDef: null,
       gridColumnApi: null,
     };
@@ -45,14 +54,23 @@ export default {
       });
       this.gridColumnApi.autoSizeColumns(allColumnIds, skipHeader);
     },
+    clearFilters() {
+      this.gridApi.getFilterInstance("id").setModel(null);
+      this.gridApi.getFilterInstance("foreignSource").setModel(null);
+      this.gridApi.getFilterInstance("lable").setModel(null);
+      this.gridApi.getFilterInstance("lableSource").setModel(null);
+      this.gridApi.getFilterInstance("foreignId").setModel(null);
+      this.gridApi.getFilterInstance("lastCapabilitiesScan").setModel(null);
+      this.gridApi.onFilterChanged();
+    },
   },
 
   beforeMount() {
     this.gridOptions = {};
     this.defaultColDef = {
+      floatingFilter: true,
       resizable: true,
       enableBrowserTooltips: true,
-      floatingFilter: true,
     };
     this.columnDefs = [
       {
@@ -60,9 +78,6 @@ export default {
         field: "id",
         sortable: true,
         headerTooltip: "ID",
-        headerCheckboxSelection: true,
-        checkboxSelection: true,
-        headerCheckboxSelectionFilteredOnly: true,
         filter: "agNumberColumnFilter",
       },
       {
@@ -70,14 +85,13 @@ export default {
         field: "foreignSource",
         sortable: true,
         headerTooltip: "Foreign Source",
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "FOREIGN ID",
         field: "foreignId",
         sortable: true,
         headerTooltip: "Foreign ID",
-        filter: "agNumberColumnFilter",
+        filter: "agTextColumnFilter",
       },
       {
         headerName: "LABLE",
@@ -145,8 +159,8 @@ export default {
   mounted() {
     this.gridApi = this.gridOptions.api;
     this.gridColumnApi = this.gridOptions.columnApi;
-    // this.sizeToFit();
-    this.autoSizeAll(false);
+    this.sizeToFit();
+    // this.autoSizeAll(false);
   },
 
   created() {
@@ -168,4 +182,19 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.button-group {
+  width: 100%;
+  height: 25px;
+}
+.map-nodes-grid {
+  width: 100%;
+  height: 700px;
+}
+.buttons {
+  float: right;
+}
+button {
+  margin-right: 5px;
+}
+</style>

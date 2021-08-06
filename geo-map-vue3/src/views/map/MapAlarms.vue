@@ -1,15 +1,30 @@
 <template>
-  <div class="alarms">
-    <ag-grid-vue
-      style="width: 100%; height: 700px"
-      class="ag-theme-alpine"
-      rowSelection="multiple"
-      :columnDefs="columnDefs"
-      :rowData="rowData"
-      :defaultColDef="defaultColDef"
-      :gridOptions="gridOptions"
-    >
-    </ag-grid-vue>
+  <div class="map-alarms">
+    <div class="button-group">
+      <span class="map-alarm-buttons">
+        <select name="subject" id="subject">
+          <option value="Acknowledge" selected="selected">Acknowledge</option>
+          <option value="Unacknowledge">Unacknowledge</option>
+          <option value="Escalate">Escalate</option>
+          <option value="Clear">Clear</option>
+        </select>
+        <button v-on:click="submit()">Submit</button> &nbsp;
+        <button v-on:click="clearFilters()">Clear Filters</button>
+        <button v-on:click="syncMap()">Sync</button>
+      </span>
+    </div>
+    <div class="map-alarms-grid">
+      <ag-grid-vue
+        style="width: 100%; height: 700px"
+        class="ag-theme-alpine"
+        rowSelection="multiple"
+        :columnDefs="columnDefs"
+        :rowData="rowData"
+        :defaultColDef="defaultColDef"
+        :gridOptions="gridOptions"
+      >
+      </ag-grid-vue>
+    </div>
   </div>
 </template>
 
@@ -18,13 +33,14 @@ import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
 import AlarmsService from "@/services/AlarmsService.js";
+
 export default {
   data() {
     return {
       gridOptions: null,
       gridApi: null,
       columnDefs: null,
-      rowData: [],
+      rowData: null,
       defaultColDef: null,
       gridColumnApi: null,
     };
@@ -70,7 +86,7 @@ export default {
         field: "severity",
         sortable: true,
         headerTooltip: "Severity",
-        filter: "agTextColumnFilter",
+        filter: "agNumberColumnFilter",
       },
       {
         headerName: "Node",
@@ -81,16 +97,24 @@ export default {
       },
       {
         headerName: "UEI",
+        field: "lable",
+        sortable: true,
+        headerTooltip: "Lable",
+        filter: "agTextColumnFilter",
+      },
+      {
+        headerName: "LABLE SOURCE",
         field: "uei",
         sortable: true,
-        headerTooltip: "uei",
+        headerTooltip: "UEI",
+        filter: "agTextColumnFilter",
       },
       {
         headerName: "COUNT",
         field: "count",
         sortable: true,
         headerTooltip: "Count",
-        filter: "agTextColumnFilter",
+        filter: "agNumberColumnFilter",
       },
       {
         headerName: "LAST EVENT TIME",
@@ -120,6 +144,7 @@ export default {
   },
 
   created() {
+
     AlarmsService.getAlarms()
       .then((response) => {
         console.log(response.data);
@@ -140,4 +165,20 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.button-group {
+  width: 100%;
+  height: 25px;
+}
+.map-alarms-grid {
+  width: 100%;
+  height: 700px;
+}
+.map-alarm-buttons {
+  float: right;
+}
+button {
+  margin-left: 4px;
+  margin-right: 6px;
+}
+</style>
