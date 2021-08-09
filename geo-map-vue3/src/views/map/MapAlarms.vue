@@ -21,6 +21,7 @@
         :rowData="rowData"
         :defaultColDef="defaultColDef"
         :gridOptions="gridOptions"
+        :pagination="true"
       >
       </ag-grid-vue>
     </div>
@@ -68,6 +69,7 @@ export default {
       floatingFilter: true,
       resizable: true,
       enableBrowserTooltips: true,
+      filter: "agTextColumnFilter",
     };
     this.columnDefs = [
       {
@@ -88,28 +90,24 @@ export default {
         field: "severity",
         sortable: true,
         headerTooltip: "Severity",
-        filter: "agNumberColumnFilter",
       },
       {
         headerName: "Node",
         field: "node",
         sortable: true,
         headerTooltip: "Node",
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "UEI",
         field: "lable",
         sortable: true,
         headerTooltip: "Lable",
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "LABLE SOURCE",
         field: "uei",
         sortable: true,
         headerTooltip: "UEI",
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "COUNT",
@@ -136,7 +134,6 @@ export default {
         field: "logMessage",
         sortable: true,
         headerTooltip: "Log Message",
-        filter: "agTextColumnFilter",
       },
     ];
   },

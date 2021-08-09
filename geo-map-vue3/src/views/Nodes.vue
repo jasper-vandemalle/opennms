@@ -8,6 +8,7 @@
       :rowData="rowData"
       :defaultColDef="defaultColDef"
       :gridOptions="gridOptions"
+      :pagination="true"
     >
     </ag-grid-vue>
   </div>
