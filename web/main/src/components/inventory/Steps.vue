@@ -12,6 +12,7 @@
 <script lang="ts">
 import { ref, defineComponent } from 'vue'
 import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
 import Steps from 'primevue/steps'
 
 export default defineComponent({
@@ -19,6 +20,7 @@ export default defineComponent({
     Steps
   },
   setup() {
+    const store = useStore()
     const router = useRouter()
     const items = ref([
         {
@@ -41,8 +43,11 @@ export default defineComponent({
     const prevPage = (event: any) => {
       router.push(items.value[event.pageIndex - 1].to);
     }
-    const complete = () => {
-      router.push('/')
+    const complete = async () => {
+      const success = await store.dispatch('inventoryModule/scheduleProvision')
+      if (success) {
+        router.push('/')
+      }
     }
 
     return { 

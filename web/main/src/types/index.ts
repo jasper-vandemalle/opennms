@@ -220,7 +220,14 @@ export interface SNMPDetectResponse {
   location: string
   hostname: string
   ipAddress: string
-  sysOID: string
+  sysOID: string | null
   communityString: string
   hasSNMPService: boolean
+}
+
+export interface ProvisionRequest {
+  batchName: string
+  scheduleTime: number
+  discoverIPRanges: IPRange[]
+  snmpConfigList: SNMPDetectRequest[]
 }

@@ -26,12 +26,15 @@
     <StepScheduleContentNow />
   </div>
   <div v-if="selected === later">
-    <StepScheduleContentLater />
+    <StepScheduleContentLater :data="data" />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import dayjs from 'dayjs'
+import { defineComponent, ref, computed } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import StepScheduleContentNow from './StepScheduleContentNow.vue'
@@ -45,13 +48,32 @@ export default defineComponent({
     StepScheduleContentLater
   },
   setup() {
+    const dayjsNow = dayjs()
+    const store = useStore()
+    const router = useRouter()
     const now = 'now'
     const later = 'later'
     const selected = ref()
     const batchName = ref('defaultName')
 
-    const showNowForm = () => {
+    const ipRanges = computed(() => store.state.inventoryModule.ipRanges)
+    const snmpDetectRequest = computed(() => store.state.inventoryModule.snmpDetectRequest)
+
+    const data = computed(() => ({
+      batchName: batchName.value,
+      discoverIPRanges: ipRanges.value,
+      snmpConfigList: snmpDetectRequest.value,
+    }))
+
+    const showNowForm = async () => {
       selected.value = now
+
+      const req = { scheduleTime: dayjsNow.unix(), ...data.value}
+      const success = await store.dispatch('inventoryModule/provision', req)
+      
+      if (success) {
+        router.push('/')
+      }
     }
 
     const showLaterForm = () => {
@@ -60,6 +82,7 @@ export default defineComponent({
 
     return {
       now,
+      data,
       later,
       selected,
       batchName,

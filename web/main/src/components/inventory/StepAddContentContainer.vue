@@ -45,19 +45,43 @@ export default defineComponent({
     const store = useStore()
     const formsValues = ref([] as any)
     const forms = ref([0])
+    const requiredFields = ref([])
 
     const addForm = () => forms.value.push(forms.value.length)
-    const setValues = (form: any) => {formsValues.value[form.index] = form.data; console.log(form.data)}
+    const setValues = (form: any) => {
+      console.log(form)
+      formsValues.value[form.index] = form.data
+      requiredFields.value = form.requiredFields
+    }
+
+    const isValid = () => {
+      const missingFields = []
+      for (const form of formsValues.value) {
+        for (const field of requiredFields.value) {
+          if (!form[field]) missingFields.push(field) 
+        }
+      }
+
+      return Boolean(missingFields.length === 0)
+    }
 
     const test = async () => {
       // store.dispatch('spinnerModule/setSpinnerState', true)
-      const success = await store.dispatch('inventoryModule/scanIPRanges', formsValues.value)
-      // store.dispatch('spinnerModule/setSpinnerState', false)
 
-      if (success) {
-        // display next btn if testing successful
-        store.dispatch('inventoryModule/showAddStepNextButton', true)
-      }
+      //const validForms = isValid()
+
+      //if (validForms) {
+        const success = await store.dispatch('inventoryModule/scanIPRanges', formsValues.value)
+
+        if (success) {
+          // display next btn if testing successful
+          store.dispatch('inventoryModule/showAddStepNextButton', true)
+        } else {
+          store.dispatch('inventoryModule/showAddStepNextButton', false)
+        }
+      //}
+      
+      // store.dispatch('spinnerModule/setSpinnerState', false)
     }
 
     return {

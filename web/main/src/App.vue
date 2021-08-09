@@ -1,6 +1,6 @@
 <template>
   <div id="layout">
-    <router-view/>
+    <router-view />
     <!-- <Spinner /> -->
   </div>
 </template>

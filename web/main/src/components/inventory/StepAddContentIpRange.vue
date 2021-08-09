@@ -51,7 +51,8 @@ export default defineComponent({
 
     const setValues = () => context.emit('set-values', { 
       index: props.index, 
-      data: {...data.value } 
+      data: {...data.value },
+      requiredFields: ['location', 'startIP', 'endIP']
     })
 
     return {

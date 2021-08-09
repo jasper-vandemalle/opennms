@@ -31,7 +31,13 @@ export default defineComponent({
     Dropdown,
     Button,
   },
-  setup() {
+  props: {
+    data: {
+      required: true,
+      type: Object
+    }
+  },
+  setup(props) {
     const store = useStore()
     const reRunOptions = ['Never', 'Weekly', 'Daily']
     const selectedReRunOption = ref('Never')
@@ -40,6 +46,13 @@ export default defineComponent({
     watch(calendarDate, (calendarDate) => {
       if (calendarDate) {
         store.dispatch('inventoryModule/setShowCompleteButton', true)
+
+        const date = new Date(calendarDate)
+        const unix = date.valueOf()
+        const req = { scheduleTime: unix, ...props.data }
+
+        store.dispatch('inventoryModule/saveProvisionRequest', req)
+
       } else {
         store.dispatch('inventoryModule/setShowCompleteButton', false)
       }
