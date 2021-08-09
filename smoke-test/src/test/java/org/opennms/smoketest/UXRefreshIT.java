@@ -65,8 +65,8 @@ public class UXRefreshIT extends OpenNMSSeleniumIT {
         assertEquals("ItsRainingItsPouring", node.getLabel());
 
         // Switch to the new UI
-        wait.until(pageContainsText("New Experience"));
-        clickElement(By.linkText("New Experience"));
+        wait.until(pageContainsText("UI Preview"));
+        clickElement(By.id("ui-preview-btn"));
         wait.until(pageContainsText("Return to previous UI"));
     }
 
