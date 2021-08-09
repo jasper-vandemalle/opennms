@@ -3,7 +3,7 @@
     <router-link :to="{ name: 'Home'}">Home</router-link> |
     <router-link :to="{ name: 'Alarms'}">Alarms</router-link> |
     <router-link :to="{ name: 'Nodes'}">Nodes</router-link> |
-    <router-link :to="{ name: 'MapNodes'}">Map</router-link>
+    <router-link :to="{ name: 'Map'}">Map</router-link>
   </div>
   <router-view />
 </template>
