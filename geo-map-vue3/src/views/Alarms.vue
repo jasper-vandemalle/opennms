@@ -64,6 +64,9 @@ export default {
         checkboxSelection: true,
         headerCheckboxSelectionFilteredOnly: true,
         filter: "agNumberColumnFilter",
+        comparator: (valueA, valueB) => {
+          return valueA - valueB;
+        },
       },
       {
         headerName: "SEVERITY",
@@ -91,6 +94,9 @@ export default {
         sortable: true,
         headerTooltip: "Count",
         filter: "agTextColumnFilter",
+        comparator: (valueA, valueB) => {
+          return valueA - valueB;
+        },
       },
       {
         headerName: "LAST EVENT TIME",

@@ -64,6 +64,9 @@ export default {
         checkboxSelection: true,
         headerCheckboxSelectionFilteredOnly: true,
         filter: "agNumberColumnFilter",
+        comparator: (valueA, valueB) => {
+          return valueA - valueB;
+        },
       },
       {
         headerName: "FOREIGN SOURCE",

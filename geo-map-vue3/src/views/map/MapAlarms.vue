@@ -10,7 +10,6 @@
         </select>
         <button v-on:click="submit()">Submit</button> &nbsp;
         <button v-on:click="clearFilters()">Clear Filters</button>
-        <button v-on:click="syncMap()">Sync</button>
       </span>
     </div>
     <div class="map-alarms-grid">
@@ -80,6 +79,9 @@ export default {
         checkboxSelection: true,
         headerCheckboxSelectionFilteredOnly: true,
         filter: "agNumberColumnFilter",
+        comparator: (valueA, valueB) => {
+          return valueA - valueB;
+        },
       },
       {
         headerName: "SEVERITY",
@@ -115,6 +117,9 @@ export default {
         sortable: true,
         headerTooltip: "Count",
         filter: "agNumberColumnFilter",
+        comparator: (valueA, valueB) => {
+          return valueA - valueB;
+        },
       },
       {
         headerName: "LAST EVENT TIME",
@@ -144,7 +149,7 @@ export default {
   },
 
   created() {
-
+    console.log("I'm in AlaemNodes page");
     AlarmsService.getAlarms()
       .then((response) => {
         console.log(response.data);

@@ -26,6 +26,9 @@ export default {
     Splitpanes,
     Pane,
   },
+  created() {
+    console.log("I'm in Map page")
+  }
 };
 </script>
 

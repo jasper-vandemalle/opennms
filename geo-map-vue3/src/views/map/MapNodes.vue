@@ -71,14 +71,19 @@ export default {
       floatingFilter: true,
       resizable: true,
       enableBrowserTooltips: true,
+      filter: "agTextColumnFilter",
     };
     this.columnDefs = [
       {
         headerName: "ID",
         field: "id",
         sortable: true,
+        // comparator: numberSort,
         headerTooltip: "ID",
         filter: "agNumberColumnFilter",
+        comparator: (valueA, valueB) => {
+          return valueA - valueB;
+        },
       },
       {
         headerName: "FOREIGN SOURCE",
@@ -91,21 +96,18 @@ export default {
         field: "foreignId",
         sortable: true,
         headerTooltip: "Foreign ID",
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "LABLE",
         field: "lable",
         sortable: true,
         headerTooltip: "Lable",
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "LABLE SOURCE",
         field: "lableSource",
         sortable: true,
         headerTooltip: "Lable Source",
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "LAST CAPABILITIES SCAN",
@@ -159,11 +161,12 @@ export default {
   mounted() {
     this.gridApi = this.gridOptions.api;
     this.gridColumnApi = this.gridOptions.columnApi;
-    this.sizeToFit();
-    // this.autoSizeAll(false);
+    // this.sizeToFit();
+    this.autoSizeAll(false);
   },
 
   created() {
+    console.log("I'm in MapNodes page");
     NodesService.getNodes()
       .then((response) => {
         this.rowData = response.data.node.map((node) => ({

@@ -84,7 +84,7 @@ export default {
   methods: {},
 
   created() {
-
+console.log("I'm in Leaflet page")
   },
 };
 </script>
