@@ -65,8 +65,8 @@ import org.opennms.features.newgui.rest.model.SNMPFitRequestDTO;
 import org.opennms.features.newgui.rest.model.SNMPFitResultDTO;
 import org.opennms.features.newgui.rest.model.ScanResultDTO;
 import org.opennms.netmgt.config.DiscoveryConfigFactory;
+import org.opennms.netmgt.config.SnmpConfigAccessService;
 import org.opennms.netmgt.config.SnmpEventInfo;
-import org.opennms.netmgt.config.SnmpPeerFactory;
 import org.opennms.netmgt.config.discovery.DiscoveryConfiguration;
 import org.opennms.netmgt.config.discovery.IncludeRange;
 import org.opennms.netmgt.events.api.EventConstants;
@@ -88,6 +88,7 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
     private final LocationAwarePingClient locationAwarePingClient;
     private final LocationAwareSnmpClient locationAwareSnmpClient;
     private RequisitionAccessService requisitionService;
+    private SnmpConfigAccessService snmpConfigService;
     private EventForwarder eventForwarder;
 
     private static final String DEFAULT_SYS_OBJECTID_INSTANCE = ".1.3.6.1.2.1.1.2.0";
@@ -100,6 +101,7 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
         this.locationAwareSnmpClient = locationAwareSnmpClient;
         this.requisitionService = requisitionService;
         this.eventForwarder = eventForwarder;
+        this.snmpConfigService = new SnmpConfigAccessService();
     }
 
     @Override
@@ -236,21 +238,19 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
     }
 
     private void provisionSNMPConfig(List<SNMPFitRequestDTO> fitRequestDTOList) {
-        CompletableFuture.runAsync(() -> {
-            buildRequestFromDTO(fitRequestDTOList)
-                    .forEach(fitRq -> {
-                        try {
-                            SnmpPeerFactory.getInstance().define(createEventInfo(fitRq));
-                        } catch (UnknownHostException e) {
-                            LOG.error("Can't create SNMP config for {} ", fitRq);
-                        }
-                    });
-            try {
-                SnmpPeerFactory.getInstance().saveCurrent();
-            } catch (IOException e) {
-                LOG.error("Couldn't save the SNMP config file", e);
-            }
-        });
+        if(fitRequestDTOList!=null && fitRequestDTOList.size()>0) {
+            CompletableFuture.runAsync(() -> {
+                buildRequestFromDTO(fitRequestDTOList)
+                        .forEach(fitRq -> {
+                            try {
+                                snmpConfigService.define(createEventInfo(fitRq));
+                            } catch (UnknownHostException e) {
+                                LOG.error("Can't create SNMP config for {} ", fitRq);
+                            }
+                        });
+                snmpConfigService.flushAll();
+            });
+        }
     }
 
     private SnmpEventInfo createEventInfo(FitRequest fitRequest) throws UnknownHostException {
@@ -270,26 +270,28 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
     }
 
     private void provisionDiscoverConfig(List<IPAddressScanRequestDTO> ipScanList, String requisition) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                //TODO ideally we should use DiscoveryConfigFactory for discovery config file operation. However it doesn't work.
-                DiscoveryConfiguration discoveryConfig = readConfig();
-                discoveryConfig.setForeignSource(requisition);
-                discoveryConfig.setInitialSleepTime(2000L);
-                discoveryConfig.setRestartSleepTime(86400000L);
-                discoveryConfig.setPacketsPerSecond(DiscoveryConfigFactory.DEFAULT_PACKETS_PER_SECOND);
-                ipScanList.forEach(ips -> discoveryConfig.addIncludeRange(createIncludeRange(ips, requisition)));
-                StringWriter writer = new StringWriter();
-                JaxbUtils.marshal(discoveryConfig, writer);
-                LOG.debug("Writing discovery config {}", writer.toString().trim());
-                saveConfig(writer.toString().trim());
-                EventBuilder builder = new EventBuilder(EventConstants.DISCOVERYCONFIG_CHANGED_EVENT_UEI, "REST");
-                builder.addParam(EventConstants.PARM_DAEMON_NAME, "Discovery");
-                eventForwarder.sendNow(builder.getEvent());
-            } catch (Exception e) {
-                LOG.error("Failed on creating discover config {}", ipScanList, e);
-            }
-        });
+        if(ipScanList!=null && ipScanList.size()> 0) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    //TODO ideally we should use DiscoveryConfigFactory for discovery config file operation. However it doesn't work.
+                    DiscoveryConfiguration discoveryConfig = readConfig();
+                    discoveryConfig.setForeignSource(requisition);
+                    discoveryConfig.setInitialSleepTime(2000L);
+                    discoveryConfig.setRestartSleepTime(86400000L);
+                    discoveryConfig.setPacketsPerSecond(DiscoveryConfigFactory.DEFAULT_PACKETS_PER_SECOND);
+                    ipScanList.forEach(ips -> discoveryConfig.addIncludeRange(createIncludeRange(ips, requisition)));
+                    StringWriter writer = new StringWriter();
+                    JaxbUtils.marshal(discoveryConfig, writer);
+                    LOG.debug("Writing discovery config {}", writer.toString().trim());
+                    saveConfig(writer.toString().trim());
+                    EventBuilder builder = new EventBuilder(EventConstants.DISCOVERYCONFIG_CHANGED_EVENT_UEI, "REST");
+                    builder.addParam(EventConstants.PARM_DAEMON_NAME, "Discovery");
+                    eventForwarder.sendNow(builder.getEvent());
+                } catch (Exception e) {
+                    LOG.error("Failed on creating discover config {}", ipScanList, e);
+                }
+            });
+        }
     }
 
     private IncludeRange createIncludeRange(IPAddressScanRequestDTO scanRequest, String requisition) {
@@ -314,13 +316,13 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
     }
 
     private synchronized void saveConfig(String xml) throws IOException {
-        if(StringUtils.isNotEmpty(xml)) {
+        if (StringUtils.isNotEmpty(xml)) {
             Writer writer = null;
             try {
                 writer = new OutputStreamWriter(new FileOutputStream(ConfigFileConstants.getFile(ConfigFileConstants.DISCOVERY_CONFIG_FILE_NAME)), StandardCharsets.UTF_8);
                 writer.write(xml);
             } finally {
-                if(writer != null) {
+                if (writer != null) {
                     IOUtils.close(writer);
                 }
             }
