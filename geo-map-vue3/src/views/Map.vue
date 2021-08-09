@@ -6,19 +6,16 @@
       </div>
     </pane>
     <pane id="map-pane-under">
-      <button @click="currentTabComponent = 'Alarms'">Alarms View</button>
-      <button @click="currentTabComponent = 'Nodes'">Nodes View</button>
-      <keep-alive>
-        <component :is="currentTabComponent"></component>
-      </keep-alive>
+      <router-link :to="{ name: 'MapAlarms' }">Alarms</router-link>
+      |
+      <router-link :to="{ name: 'MapNodes' }">Nodes</router-link>   
+      <router-view />
     </pane>
   </splitpanes>
 </template>
 
 <script>
 import LeafletMap from "@/components/LeafletMap.vue";
-import Alarms from "@/components/MapAlarms.vue";
-import Nodes from "@/components/MapNodes.vue";
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
@@ -28,13 +25,6 @@ export default {
     LeafletMap,
     Splitpanes,
     Pane,
-    Alarms,
-    Nodes,
-  },
-  data() {
-    return {
-      currentTabComponent: Nodes,
-    };
   },
 };
 </script>
@@ -48,7 +38,7 @@ export default {
   font-family: Arial;
   font-size: 15px;
   /* font-weight: bold; */
-  color: #7e8198;
+  color: #7E8198;
 }
 
 #map-pane-under a.router-link-exact-active {
