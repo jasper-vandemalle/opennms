@@ -16,7 +16,6 @@
         :rowData="rowData"
         :defaultColDef="defaultColDef"
         :gridOptions="gridOptions"
-        @grid-ready="onGridReady"
         :pagination="true"
       >
       </ag-grid-vue>
@@ -28,7 +27,11 @@
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
+import { mapState } from "vuex";
 export default {
+  components: {
+    "ag-grid-vue": AgGridVue,
+  },
   data() {
     return {
       gridOptions: null,
@@ -39,22 +42,24 @@ export default {
       gridColumnApi: null,
     };
   },
-
-  components: {
-    "ag-grid-vue": AgGridVue,
+  computed: mapState(["selectedNodesID"]),
+  watch: {
+    selectedNodesID(newValue, oldValue) {
+      console.log(`SelectedNodesID updating from ${oldValue} to ${newValue}`);
+      this.gridApi.setRowData(
+        this.$store.getters.getSelectedNodesFromIDs.map((node) => ({
+          id: node.id,
+          foreignSource: node.foreignSource,
+          foreignId: node.foreignId,
+          lable: node.label,
+          lableSource: node.labelSource,
+          lastCapabilitiesScan: node.lastCapsdPoll,
+        }))
+      );
+    },
   },
 
   methods: {
-    onGridReady() {
-      this.rowData = this.$store.getters.getSelectedNodesFromIDs.map((node) => ({
-        id: node.id,
-        foreignSource: node.foreignSource,
-        foreignId: node.foreignId,
-        lable: node.label,
-        lableSource: node.labelSource,
-        lastCapabilitiesScan: node.lastCapsdPoll,
-      }));
-    },
     sizeToFit() {
       this.gridApi.sizeColumnsToFit();
     },
@@ -74,6 +79,9 @@ export default {
       this.gridApi.getFilterInstance("foreignId").setModel(null);
       this.gridApi.getFilterInstance("lastCapabilitiesScan").setModel(null);
       this.gridApi.onFilterChanged();
+    },
+    syncMap() {},
+    showTopology() {
     },
   },
 
@@ -178,6 +186,15 @@ export default {
 
   created() {
     console.log("I'm in MapNodes page");
+    console.log(this.$store.state.selectedNodesID);
+    this.rowData = this.$store.getters.getSelectedNodesFromIDs.map((node) => ({
+      id: node.id,
+      foreignSource: node.foreignSource,
+      foreignId: node.foreignId,
+      lable: node.label,
+      lableSource: node.labelSource,
+      lastCapabilitiesScan: node.lastCapsdPoll,
+    }));
   },
 };
 </script>
