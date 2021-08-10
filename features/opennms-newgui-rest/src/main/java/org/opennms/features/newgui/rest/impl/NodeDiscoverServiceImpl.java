@@ -167,7 +167,9 @@ public class NodeDiscoverServiceImpl implements NodeDiscoverRestService {
                 if (StringUtils.isNotEmpty(r.getConfig().getCommunityString())) {
                     agentConfig.setWriteCommunity(r.getConfig().getCommunityString());
                 }
-                agentConfig.setSecurityLevel(SnmpAgentConfig.DEFAULT_SECURITY_LEVEL);
+                int securityLevel = r.getConfig().getSecurityLevel();
+                securityLevel = ((securityLevel >= 1) && (securityLevel <= 3)) ? securityLevel : SnmpAgentConfig.DEFAULT_SECURITY_LEVEL;
+                agentConfig.setSecurityLevel(securityLevel);
                 agentConfig.setRetries(r.getConfig().getRetry());
                 agentConfig.setTimeout(r.getConfig().getTimeout());
                 CompletableFuture<SnmpValue> future = locationAwareSnmpClient.get(agentConfig, objId)
