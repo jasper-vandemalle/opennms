@@ -8,8 +8,9 @@
           <option value="Escalate">Escalate</option>
           <option value="Clear">Clear</option>
         </select>
-        <button v-on:click="submit()">Submit</button> &nbsp;
+        <button v-on:click="submit()">Submit</button>
         <button v-on:click="clearFilters()">Clear Filters</button>
+        <button v-on:click="syncMap()">Sync Map</button>
       </span>
     </div>
     <div class="map-alarms-grid">
@@ -32,7 +33,6 @@
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
-import AlarmsService from "@/services/AlarmsService.js";
 
 export default {
   data() {
@@ -146,23 +146,15 @@ export default {
   },
 
   created() {
-    console.log("I'm in AlaemNodes page");
-    AlarmsService.getAlarms()
-      .then((response) => {
-        console.log(response.data);
-        this.rowData = response.data.alarm.map((alarm) => ({
-          id: alarm.id,
-          severity: alarm.severity,
-          node: alarm.nodeLabel,
-          uei: alarm.uei,
-          count: alarm.count,
-          lastEventTime: alarm.lastEvent.time,
-          logMessage: alarm.logMessage,
-        }));
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    this.rowData = this.$store.state.alarms.map((alarm) => ({
+      id: alarm.id,
+      severity: alarm.severity,
+      node: alarm.nodeLabel,
+      uei: alarm.uei,
+      count: alarm.count,
+      lastEventTime: alarm.lastEvent.time,
+      logMessage: alarm.logMessage,
+    }));
   },
 };
 </script>

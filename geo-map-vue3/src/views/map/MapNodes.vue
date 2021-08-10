@@ -4,7 +4,7 @@
       <span class="buttons">
         <button v-on:click="clearFilters()">Clear Filters</button>
         <button v-on:click="showTopology()">Show Topology</button>
-        <button v-on:click="syncMap()">Sync</button>
+        <button v-on:click="syncMap()">Sync Map</button>
       </span>
     </div>
     <div class="map-nodes-grid">
@@ -16,6 +16,7 @@
         :rowData="rowData"
         :defaultColDef="defaultColDef"
         :gridOptions="gridOptions"
+        @grid-ready="onGridReady"
         :pagination="true"
       >
       </ag-grid-vue>
@@ -27,7 +28,6 @@
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
-import NodesService from "@/services/NodesService.js";
 export default {
   data() {
     return {
@@ -45,6 +45,16 @@ export default {
   },
 
   methods: {
+    onGridReady() {
+      this.rowData = this.$store.getters.getSelectedNodesFromIDs.map((node) => ({
+        id: node.id,
+        foreignSource: node.foreignSource,
+        foreignId: node.foreignId,
+        lable: node.label,
+        lableSource: node.labelSource,
+        lastCapabilitiesScan: node.lastCapsdPoll,
+      }));
+    },
     sizeToFit() {
       this.gridApi.sizeColumnsToFit();
     },
@@ -55,6 +65,7 @@ export default {
       });
       this.gridColumnApi.autoSizeColumns(allColumnIds, skipHeader);
     },
+    //TODO: make this smarter
     clearFilters() {
       this.gridApi.getFilterInstance("id").setModel(null);
       this.gridApi.getFilterInstance("foreignSource").setModel(null);
@@ -79,7 +90,6 @@ export default {
         headerName: "ID",
         field: "id",
         sortable: true,
-        // comparator: numberSort,
         headerTooltip: "ID",
         filter: "agNumberColumnFilter",
         comparator: (valueA, valueB) => {
@@ -168,20 +178,6 @@ export default {
 
   created() {
     console.log("I'm in MapNodes page");
-    NodesService.getNodes()
-      .then((response) => {
-        this.rowData = response.data.node.map((node) => ({
-          id: node.id,
-          foreignSource: node.foreignSource,
-          foreignId: node.foreignId,
-          lable: node.label,
-          lableSource: node.labelSource,
-          lastCapabilitiesScan: node.lastCapsdPoll,
-        }));
-      })
-      .catch((error) => {
-        console.log(error);
-      });
   },
 };
 </script>

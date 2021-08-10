@@ -8,7 +8,7 @@
     <pane id="map-pane-under">
       <router-link :to="{ name: 'MapAlarms' }">Alarms</router-link>
       |
-      <router-link :to="{ name: 'MapNodes' }">Nodes</router-link>   
+      <router-link :to="{ name: 'MapNodes' }">Nodes</router-link>
       <router-view />
     </pane>
   </splitpanes>
@@ -27,8 +27,10 @@ export default {
     Pane,
   },
   created() {
-    console.log("I'm in Map page")
-  }
+    console.log("I'm in Map page");
+    this.$store.dispatch("fetchNodes"); 
+    this.$store.dispatch("fetchAlarms");
+  },
 };
 </script>
 
@@ -41,7 +43,7 @@ export default {
   font-family: Arial;
   font-size: 15px;
   /* font-weight: bold; */
-  color: #7E8198;
+  color: #7e8198;
 }
 
 #map-pane-under a.router-link-exact-active {

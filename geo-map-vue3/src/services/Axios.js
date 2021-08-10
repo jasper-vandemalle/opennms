@@ -6,7 +6,11 @@ const v2ApiClient = axios.create({
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json'
-  }
+  },
+  auth: {
+    username: 'admin',
+    password: 'admin'
+  },
 })
 
 export {
