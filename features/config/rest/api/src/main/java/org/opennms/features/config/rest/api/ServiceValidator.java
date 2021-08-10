@@ -28,41 +28,15 @@
 
 package org.opennms.features.config.rest.api;
 
-import org.opennms.features.config.dao.api.ConfigData;
-import org.opennms.features.config.dao.api.ConfigSchema;
+import com.atlassian.oai.validator.report.ValidationReport;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
 
-@Path("/configManager")
-@Produces("application/json")
-@Consumes("application/json")
-/**
- * <b>Currently for testing OSGI integration</b>
- */
-public interface ConfigManagerRestService {
-    @GET
-    @Produces(value = {MediaType.APPLICATION_JSON})
-    Set<String> listServices();
+public interface ServiceValidator {
 
-    @GET
-    @Path("/schema/{service}")
-    String getOpenApiSchema(@PathParam("service") String service) throws IOException, ClassNotFoundException;
+    ValidationReport validateRequest(String serviceName, HttpServletRequest servletRequest) throws IOException;
 
-    @GET
-    @Path("/{serviceName}")
-    ConfigSchema getSchema(@PathParam("serviceName") String serviceName);
-
-    @GET
-    @Path("/{serviceName}/{configId}")
-    ConfigData getConfigFile(@PathParam("serviceName") String serviceName, @PathParam("configId") String filename);
-
-    @POST
-    @Path("/{serviceName}/{configId}/attach")
-    ConfigData getView(@PathParam("serviceName") String serviceName, @PathParam("configId") String filename, Map<String, Object> inputParameters);
-
+    ValidationReport validateRequest(String serviceName, HttpServletRequest servletRequest, String body) throws IOException;
 
 }

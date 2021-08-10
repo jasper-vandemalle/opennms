@@ -23,6 +23,89 @@
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Version>${project.version}</Bundle-Version>
             <Karaf-Commands>*</Karaf-Commands>
+            <Export-Package>
+              com.atlassian.oai.validator.*;version="${swaggerRequestValidatorVersion}",
+              io.swagger.v3.oas.models,
+              io.swagger.v3.oas.models.responses,
+              io.swagger.v3.parser.core.models,
+              io.swagger.v3.oas.models.media,
+              io.swagger.v3.oas.models.parameters,
+              com.github.fge.*,
+              io.swagger.*,
+              org.mozilla.*
+            </Export-Package>
+            <!--
+
+
+
+              io.swagger.validate.*,
+              io.swagger.v3.parser,
+              io.swagger.v3.parser.processors.*,
+              io.swagger.v3.parser.models.*,
+              io.swagger.v3.parser.core.*,
+              io.swagger.v3.parser.converter.*,
+              io.swagger.v3.parser.exception.*,
+              io.swagger.v3.oas.*,
+              io.swagger.validate.*,
+              io.swagger.oas.*,
+              io.swagger.core.*,
+              io.swagger.reader.*,
+              io.swagger.report.*,
+              io.swagger.models.*,
+              io.swagger.model.*,
+              io.swagger.transform.*,
+              io.swagger.jackson.*,
+              io.swagger.annotations.*,
+              io.swagger.io.*,
+              io.swagger.v3.core.converter.*,
+              io.swagger.v3.core.jackson.*,
+              io.swagger.deserializer.*,
+              io.swagger.converter.*,
+              io.swagger.config.*,
+              io.swagger.parser,
+              io.swagger.parser.processors
+
+              com.github.fge.jackson.*,
+              com.github.fge.jsonpatch.*,
+              com.github.fge.jsonschema.*,
+              com.github.fge.msgsimple.*,
+              com.github.fge.uritemplate.*,
+              com.github.fge,
+
+              io.swagger.parser.util,
+              io.swagger.util,
+              io.swagger.v3.core.util,
+              io.swagger.v3.parser.util,
+
+            -->
+            <!--Import-Package>org.slf4j,io.swagger.v3.oas.models,io.swagger.v3.oas.models.responses,io.swagger.v3.parser.core.models,io.swagger.v3.oas.models.media,io.swagger.v3.oas.models.parameters</Import-Package>
+              <Export-Package>
+                com.atlassian.oai.validator;version="${project.version}",
+                com.atlassian.oai.validator.model;version="${project.version}",
+                com.atlassian.oai.validator.report;version="${project.version}",
+                com.atlassian.oai.validator.schema;version="${project.version}",
+                com.atlassian.oai.validator.util;version="${project.version}",
+                com.atlassian.oai.validator.whitelist;version="${project.version}"
+              </Export-Package>
+            <unpackBundle>true</unpackBundle>
+            </instructions-->
+
+            <!--Export-Package>
+              com.atlassian.oai.validator.*;version="${swaggerRequestValidatorVersion}",
+              io.swagger.*,
+              com.github.fge.*,
+              com.google.i18n.phonenumbers.*,
+              com.google.common.escape.*,
+              com.google.common.base.*,
+              com.fasterxml.jackson.*,
+              org.codehaus.stax2.*,
+              javax.annotation.*,
+              javax.validation.*,
+              org.mozilla.javascript.*,
+              org.mozilla.classfile.*,
+              org.yaml.snakeyaml.*,
+              joptsimple.*
+            </Export-Package-->
           </instructions>
         </configuration>
       </plugin>
@@ -40,6 +123,38 @@
       <artifactId>org.opennms.features.config.service.api</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.atlassian.oai</groupId>
+      <artifactId>swagger-request-validator-core</artifactId>
+      <version>${swaggerRequestValidatorVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.parser.v3</groupId>
+      <artifactId>swagger-parser</artifactId>
+      <version>${swaggerParserVersion}</version>
+    </dependency>
+
+       <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-models</artifactId>
+            <version>${swaggerVersion}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson2Version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>${jackson2Version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>${jackson2Version}</version>
+        </dependency>
 
     <dependency>
       <groupId>org.opennms</groupId>

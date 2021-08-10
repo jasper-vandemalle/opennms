@@ -107,7 +107,7 @@ public class ValidateUsingConverter<CONFIG_CLASS> implements ConfigConverter<CON
         String xsdStr = Resources.toString(this.getSchemaPath(), StandardCharsets.UTF_8);
         final XsdModelConverter xsdModelConverter = new XsdModelConverter();
         final XmlSchemaCollection schemaCollection = xsdModelConverter.convertToSchemaCollection(xsdStr);
-        // Grab the first namespace that includes 'opennms', sort for predictability
+        // Grab the all namespace that includes 'opennms', and we only accept one
         List<String> namespaces = Arrays.stream(schemaCollection.getXmlSchemas())
                 .map(XmlSchema::getTargetNamespace)
                 .filter(targetNamespace -> targetNamespace.contains("opennms")).collect(Collectors.toList());

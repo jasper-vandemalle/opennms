@@ -36,7 +36,11 @@
         <artifactId>json</artifactId>
         <version>${jsonVersion}</version>
       </dependency>
-
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-models</artifactId>
+        <version>${swaggerVersion}</version>
+      </dependency>
       <!-- Testing -->
     </dependencies>
 </project>

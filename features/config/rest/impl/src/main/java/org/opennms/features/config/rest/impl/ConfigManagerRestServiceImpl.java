@@ -31,11 +31,15 @@ package org.opennms.features.config.rest.impl;
 import org.opennms.features.config.dao.api.ConfigData;
 import org.opennms.features.config.dao.api.ConfigSchema;
 import org.opennms.features.config.dao.api.ConfigStoreDao;
-import org.opennms.features.config.service.api.ConfigurationManagerService;
+import org.opennms.features.config.rest.api.ApiManagerService;
 import org.opennms.features.config.rest.api.ConfigManagerRestService;
+import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.opennms.netmgt.config.provisiond.ProvisiondConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -45,18 +49,35 @@ import java.util.Set;
  */
 public class ConfigManagerRestServiceImpl implements ConfigManagerRestService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigManagerRestServiceImpl.class);
+
     @Autowired
     private ConfigStoreDao configStoreDao;
 
     @Autowired
     private ConfigurationManagerService configurationManagerService;
 
+    @Autowired
+    private ApiManagerService apiManagerService;
+
+    public void setApiManagerService(ApiManagerService apiManagerService) {
+        LOG.debug("HERE !!!! apiManagerService " + apiManagerService.toString());
+        this.apiManagerService = apiManagerService;
+    }
+
     public void setConfigStoreDao(ConfigStoreDao configStoreDao) {
         this.configStoreDao = configStoreDao;
+        LOG.debug("HERE !!!! configStoreDao " + configStoreDao.toString());
     }
 
     public void setConfigurationManagerService(ConfigurationManagerService configurationManagerService) {
         this.configurationManagerService = configurationManagerService;
+        LOG.debug("HERE !!!! configurationManagerService " + configurationManagerService.toString());
+    }
+
+    @Override
+    public String getOpenApiSchema(final String service) throws IOException, ClassNotFoundException {
+        return apiManagerService.getStringApiForConfiguration(service);
     }
 
     @Override

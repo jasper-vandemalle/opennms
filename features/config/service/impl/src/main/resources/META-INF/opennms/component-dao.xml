@@ -10,6 +10,6 @@
   <bean name="configurationManagerService" class="org.opennms.features.config.service.impl.ConfigurationManagerServiceImpl">
     <constructor-arg name="configStoreDao" ref="jsonConfigStoreDao" />
   </bean>
-  <onmsgi:service interface="org.opennms.features.config.service.api.ConfigurationManagerService" ref="configurationManagerService" />
 
+  <onmsgi:service interface="org.opennms.features.config.service.api.ConfigurationManagerService" ref="configurationManagerService" />
 </beans>
