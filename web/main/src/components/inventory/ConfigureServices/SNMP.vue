@@ -3,8 +3,8 @@
   <div class="p-col">
     <Row first><h3>SNMP</h3></Row>
     <Row label="v1/v2c community string"><InputText type="text" v-model="v1v2" class="input" @input="setValues"/></Row>
-    <Row label="Timeout"><InputText type="text" v-model="timeout" class="input" @input="setValues" /></Row>
-    <Row label="Retry"><InputText type="text" v-model="retry" class="input" @input="setValues" /></Row>
+    <Row label="Timeout"><InputText type="number" v-model="timeout" class="input" @input="setValues" /></Row>
+    <Row label="Retry"><InputText type="number" v-model="retry" class="input" @input="setValues" /></Row>
 
     <ShowHideBox label="Advanced options">
       <Row first label="Security level">
@@ -69,8 +69,8 @@ export default defineComponent({
     const retry = ref()
 
     const data = computed(() => ({ 
-      timeout: timeout.value, 
-      retry: retry.value, 
+      timeout: Number(timeout.value), 
+      retry: Number(retry.value), 
       communityString: v1v2.value,
       securityLevel: securityLevel.value
     }))
