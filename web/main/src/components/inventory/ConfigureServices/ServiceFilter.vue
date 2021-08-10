@@ -33,7 +33,7 @@ export default defineComponent({
   emits: ['set-values'],
   setup(_, context) {
     const showFilter = ref(false)
-    const value = ref()
+    const value = ref({})
     const dropdown1 = ref()
     const dropdown2 = ref('IP address')
     const dropdown3 = ref('Don\'t add node')
