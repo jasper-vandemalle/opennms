@@ -10,7 +10,8 @@
         </select>
         <button v-on:click="submit()">Submit</button>
         <button v-on:click="clearFilters()">Clear Filters</button>
-        <button v-on:click="syncMap()">Sync Map</button>
+        <button v-on:click="confirmFilters()">Confirm Filters</button>
+        <button v-on:click="reset()">Reset</button>
       </span>
     </div>
     <div class="map-alarms-grid">
@@ -33,6 +34,7 @@
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
+import { mapState } from "vuex";
 
 export default {
   data() {
@@ -50,6 +52,14 @@ export default {
     "ag-grid-vue": AgGridVue,
   },
 
+  computed: mapState(["monitoredNodesID"]),
+  watch: {
+    monitoredNodesID(newValue, oldValue) {
+      console.log(`MonitoredNodesID updating from ${oldValue} to ${newValue}`),
+        this.getAlarmsFromSelectedNodes();
+    },
+  },
+
   methods: {
     sizeToFit() {
       this.gridApi.sizeColumnsToFit();
@@ -60,6 +70,39 @@ export default {
         allColumnIds.push(column.colId);
       });
       this.gridColumnApi.autoSizeColumns(allColumnIds, skipHeader);
+    },
+    confirmFilters() {
+      let nodesLable = [];
+      this.gridApi.forEachNodeAfterFilter((node) => {
+        nodesLable.push(node.data.node);
+      });
+      this.distictNodesLable = [...new Set(nodesLable)];
+      let ids = [];
+      ids = this.$store.state.nodes
+        .filter((node) => this.distictNodesLable.includes(node.label))
+        .map((node) => node.id);
+      this.$store.commit("SET_SELECTED_NODES_ID", ids);
+    },
+    reset() {
+      this.$store.dispatch("resetMonitoredNodesID");
+    },
+
+    getAlarmsFromSelectedNodes() {
+      this.selectedNodesLable = this.$store.getters.getMonitoredNodes.map(
+        (node) => node.label
+      );
+      this.alarms = this.$store.state.alarms.filter((alarm) =>
+        this.selectedNodesLable.includes(alarm.nodeLabel)
+      );
+      this.rowData = this.alarms.map((alarm) => ({
+        id: alarm.id,
+        severity: alarm.severity,
+        node: alarm.nodeLabel,
+        uei: alarm.uei,
+        count: alarm.count,
+        lastEventTime: alarm.lastEvent.time,
+        logMessage: alarm.logMessage,
+      }));
     },
   },
 
@@ -146,15 +189,7 @@ export default {
   },
 
   created() {
-    this.rowData = this.$store.state.alarms.map((alarm) => ({
-      id: alarm.id,
-      severity: alarm.severity,
-      node: alarm.nodeLabel,
-      uei: alarm.uei,
-      count: alarm.count,
-      lastEventTime: alarm.lastEvent.time,
-      logMessage: alarm.logMessage,
-    }));
+    this.getAlarmsFromSelectedNodes();
   },
 };
 </script>

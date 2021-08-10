@@ -43,7 +43,7 @@ import {
   LPolyline,
 } from "@vue-leaflet/vue-leaflet";
 import "leaflet/dist/leaflet.css";
-// import NodesService from "@/services/NodesService.js";
+import { mapState } from "vuex";
 
 export default {
   components: {
@@ -68,6 +68,7 @@ export default {
     };
   },
   computed: {
+    ...mapState(["selectedNodesID"]),
     // iconUrl: function () {
     //   return require("../assets/node.png");
     // },
@@ -79,6 +80,11 @@ export default {
     },
     marker2latlng: function () {
       return [40.714847, -74.048383];
+    },
+  },
+  watch: {
+    selectedNodesID(newValue, oldValue) {
+      console.log(`SelectedNodesID updating from ${oldValue} to ${newValue}`);
     },
   },
   methods: {},

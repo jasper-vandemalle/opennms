@@ -6,7 +6,7 @@ export default createStore({
   state: {
     nodes: [],
     alarms: [],
-    selectedNodesID: []
+    monitoredNodesID: []
   },
   mutations: {
     SET_NODES(state, nodes) {
@@ -16,7 +16,7 @@ export default createStore({
       state.alarms = alarms
     },
     SET_SELECTED_NODES_ID(state, ids){
-      state.selectedNodesID = ids
+      state.monitoredNodesID = ids
     }
   },
   actions: {
@@ -38,11 +38,14 @@ export default createStore({
         .catch(error => {
           throw (error)
         })
+    },
+    resetMonitoredNodesID({ commit }) {
+      commit("SET_SELECTED_NODES_ID", this.state.nodes.map(node => node.id))
     }
   },
   getters: {
-    getSelectedNodesFromIDs: state => {
-      return state.nodes.filter(node => state.selectedNodesID.includes(node.id));
+    getMonitoredNodes: state => {
+      return state.nodes.filter(node => state.monitoredNodesID.includes(node.id));
     }
   },
   modules: {},

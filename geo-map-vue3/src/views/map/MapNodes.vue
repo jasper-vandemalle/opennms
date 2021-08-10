@@ -4,7 +4,8 @@
       <span class="buttons">
         <button v-on:click="clearFilters()">Clear Filters</button>
         <button v-on:click="showTopology()">Show Topology</button>
-        <button v-on:click="syncMap()">Sync Map</button>
+        <button v-on:click="confirmFilters()">Confirm Filters</button>
+        <button v-on:click="reset()">Reset</button>
       </span>
     </div>
     <div class="map-nodes-grid">
@@ -42,12 +43,12 @@ export default {
       gridColumnApi: null,
     };
   },
-  computed: mapState(["selectedNodesID"]),
+  computed: mapState(["monitoredNodesID"]),
   watch: {
-    selectedNodesID(newValue, oldValue) {
-      console.log(`SelectedNodesID updating from ${oldValue} to ${newValue}`);
+    monitoredNodesID(newValue, oldValue) {
+      console.log(`MonitoredNodesID updating from ${oldValue} to ${newValue}`);
       this.gridApi.setRowData(
-        this.$store.getters.getSelectedNodesFromIDs.map((node) => ({
+        this.$store.getters.getMonitoredNodes.map((node) => ({
           id: node.id,
           foreignSource: node.foreignSource,
           foreignId: node.foreignId,
@@ -80,9 +81,16 @@ export default {
       this.gridApi.getFilterInstance("lastCapabilitiesScan").setModel(null);
       this.gridApi.onFilterChanged();
     },
-    syncMap() {},
+    confirmFilters() {
+      let ids = [];
+      this.gridApi.forEachNodeAfterFilter(node => ids.push(node.data.id));
+      this.$store.commit("SET_SELECTED_NODES_ID", ids)
+    },
     showTopology() {
     },
+    reset(){
+      this.$store.dispatch("resetMonitoredNodesID")
+    }
   },
 
   beforeMount() {
@@ -187,7 +195,7 @@ export default {
   created() {
     console.log("I'm in MapNodes page");
     console.log(this.$store.state.selectedNodesID);
-    this.rowData = this.$store.getters.getSelectedNodesFromIDs.map((node) => ({
+    this.rowData = this.$store.getters.getMonitoredNodes.map((node) => ({
       id: node.id,
       foreignSource: node.foreignSource,
       foreignId: node.foreignId,
