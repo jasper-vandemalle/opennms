@@ -213,7 +213,7 @@ export interface SNMPDetectRequestConfig {
   communityString: string
   timeout: number
   retry: number
-  securityLevel: string
+  securityLevel: number
 }
 
 export interface SNMPDetectResponse {
