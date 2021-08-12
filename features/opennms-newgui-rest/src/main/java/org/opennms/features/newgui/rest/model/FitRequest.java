@@ -31,9 +31,9 @@ package org.opennms.features.newgui.rest.model;
 public class FitRequest {
     private String location;
     private String ipAddress;
-    private SNMConfigDTO config;
+    private SNMPConfigDTO config;
 
-    public FitRequest(String location, String ipAddress, SNMConfigDTO config) {
+    public FitRequest(String location, String ipAddress, SNMPConfigDTO config) {
         this.location = location;
         this.ipAddress = ipAddress;
         this.config = config;
@@ -55,11 +55,11 @@ public class FitRequest {
         this.ipAddress = ipAddress;
     }
 
-    public SNMConfigDTO getConfig() {
+    public SNMPConfigDTO getConfig() {
         return config;
     }
 
-    public void setConfig(SNMConfigDTO config) {
+    public void setConfig(SNMPConfigDTO config) {
         this.config = config;
     }
 

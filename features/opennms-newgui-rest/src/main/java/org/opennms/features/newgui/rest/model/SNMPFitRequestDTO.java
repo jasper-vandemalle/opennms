@@ -33,7 +33,7 @@ import java.util.List;
 public class SNMPFitRequestDTO {
     private String location;
     private List<String> ipAddresses;
-    private List<SNMConfigDTO> configurations;
+    private List<SNMPConfigDTO> configurations;
 
     public String getLocation() {
         return location;
@@ -51,11 +51,11 @@ public class SNMPFitRequestDTO {
         this.ipAddresses = ipAddresses;
     }
 
-    public List<SNMConfigDTO> getConfigurations() {
+    public List<SNMPConfigDTO> getConfigurations() {
         return configurations;
     }
 
-    public void setConfigurations(List<SNMConfigDTO> configurations) {
+    public void setConfigurations(List<SNMPConfigDTO> configurations) {
         this.configurations = configurations;
     }
 

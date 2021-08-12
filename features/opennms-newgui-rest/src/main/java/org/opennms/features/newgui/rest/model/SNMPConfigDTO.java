@@ -28,7 +28,7 @@
 
 package org.opennms.features.newgui.rest.model;
 
-public class SNMConfigDTO {
+public class SNMPConfigDTO {
     private String communityString;
     private int timeout;
     private int retry;
