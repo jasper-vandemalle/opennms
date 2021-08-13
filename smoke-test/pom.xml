@@ -44,7 +44,6 @@
                     <versionRange>[1.8,)</versionRange>
                     <goals><goal>run</goal></goals>
                   </pluginExecutionFilter>
-                  <action><ignore></ignore></action>
                 </pluginExecution>
               </pluginExecutions>
             </lifecycleMappingMetadata>
@@ -451,11 +450,11 @@
       <artifactId>cassandra</artifactId>
       <version>${testcontainers.version}</version>
     </dependency>
-    <dependency>
+    <!--<dependency>
       <groupId>org.jetbrains</groupId>
       <artifactId>annotations</artifactId>
       <version>17.0.0</version>
-    </dependency>
+    </dependency>-->
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-api</artifactId>

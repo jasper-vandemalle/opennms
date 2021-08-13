@@ -53,24 +53,34 @@ import static org.opennms.smoketest.selenium.AbstractOpenNMSSeleniumHelper.BASIC
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 
 public class NewRestAPIIT {
-    private static final String BASE_PATH = "/opennms/rest/nodediscover";
+    private static final String BASE_PATH = "opennms/rest/nodediscover";
     private static final String PATH_SCAN = BASE_PATH + "/scan";
     private static final String PATH_DETECT = BASE_PATH + "/detect";
     private static final String PATH_PROVISION = BASE_PATH + "/provision";
 
     @ClassRule
     public static final OpenNMSStack statck = OpenNMSStack.MINIMAL;
+    private static ObjectMapper jsonMapper;
 
     @BeforeClass
     public static void setupGlobal() {
         RestAssured.baseURI = statck.opennms().getBaseUrlExternal().toString();
         RestAssured.port = statck.opennms().getWebPort();
+        /*RestAssured.baseURI = "http://localhost";
+        RestAssured.port = 8980;*/
         RestAssured.authentication = preemptive().basic(BASIC_AUTH_USERNAME, BASIC_AUTH_PASSWORD);
+        jsonMapper = new ObjectMapper();
     }
 
     @AfterClass
@@ -79,29 +89,33 @@ public class NewRestAPIIT {
     }
 
     @Test
-    public void testScan() {
+    public void testScan() throws JsonProcessingException {
         RestAssured.basePath = PATH_SCAN;
-        IPAddressScanRequestDTO requestObj = new IPAddressScanRequestDTO();
-        requestObj.setLocation("Default");
-        requestObj.setStartIP("127.0.0.1");
-        requestObj.setStartIP("127.0.0.3");
-        String requestData = new JSONObject(requestObj).toString();
-        ScanResultDTO result = given().body(requestData).contentType(ContentType.JSON).post()
-                .then().statusCode(200).assertThat()
-                .body("size()", is(2)).extract().as(ScanResultDTO.class);
+        IPAddressScanRequestDTO requestDTO = new IPAddressScanRequestDTO();
+        requestDTO.setLocation("Default");
+        requestDTO.setStartIP("127.0.0.1");
+        requestDTO.setEndIP("127.0.0.3");
+        List<IPAddressScanRequestDTO> dtoList = Arrays.asList(requestDTO);
+        String requestData = jsonMapper.writeValueAsString(dtoList);
 
-        assertThat(result.getLocation(), is(requestObj.getLocation()));
-        assertThat(result.getScanResults().size(), is(3));
-        result.getScanResults().forEach(r -> {
+        List<ScanResultDTO> resultData = given().body(requestData).contentType(ContentType.JSON).post()
+                .then().statusCode(200)
+                .extract().body().jsonPath().getList("." , ScanResultDTO.class);
+
+        assertThat(resultData.size(), is(1));
+        ScanResultDTO resultDTO = resultData.get(0);
+        assertThat(resultDTO.getLocation(), is(requestDTO.getLocation()));
+        assertThat(resultDTO.getScanResults().size(), is(3));
+        resultDTO.getScanResults().forEach(r -> {
             assertThat(r.getHostname(), notNullValue());
-            assertThat(r.getIpAddress(), greaterThanOrEqualTo(requestObj.getStartIP()));
-            assertThat(r.getIpAddress(), lessThanOrEqualTo(requestObj.getEndIP()));
+            assertThat(r.getIpAddress(), greaterThanOrEqualTo(requestDTO.getStartIP()));
+            assertThat(r.getIpAddress(), lessThanOrEqualTo(requestDTO.getEndIP()));
             assertThat(r.getRtt(), greaterThan(0D));
         });
     }
 
     @Test
-    public void testDetect() {
+    public void testDetect() throws JsonProcessingException {
         RestAssured.basePath = PATH_DETECT;
         SNMPFitRequestDTO requestObj = new SNMPFitRequestDTO();
         requestObj.setLocation("Default");
@@ -118,10 +132,17 @@ public class NewRestAPIIT {
         config2.setTimeout(300);
         config2.setSecurityLevel(1);
         requestObj.setConfigurations(Arrays.asList(config1, config2));
-        String requestData = new JSONObject(requestObj).toString();
+        String requestData = jsonMapper.writeValueAsString(Arrays.asList(requestObj));
+
         List<SNMPFitResultDTO> result = given().body(requestData).contentType(ContentType.JSON).post()
-                .then().statusCode(200).assertThat()
-                .body("size()", is(4))
+                .then().statusCode(200)
                 .extract().body().jsonPath().getList(".", SNMPFitResultDTO.class);
+        assertThat(result.size(), is(4));
+        List<String> communityList = requestObj.getConfigurations().stream().map(req->req.getCommunityString()).collect(Collectors.toList());
+        result.forEach(r -> {
+            assertThat(r.getLocation(), is(requestObj.getLocation()));
+            assertThat(requestObj.getIpAddresses().contains(r.getIpAddress()), is(true));
+            assertThat(r.getHostname(), notNullValue());
+        });
     }
 }

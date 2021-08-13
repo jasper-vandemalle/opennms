@@ -30,6 +30,9 @@ package org.opennms.features.newgui.rest.model;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(value = {"hasSNMPService"}, allowGetters = true)
 public class SNMPFitResultDTO {
     private String location;
     private String hostname;
