@@ -27,7 +27,6 @@ export default {
     Pane,
   },
   created() {
-    console.log("I'm in Map page");
     this.$store.dispatch("fetchNodes"); 
     this.$store.dispatch("fetchAlarms");
   },

@@ -15,7 +15,7 @@ export default createStore({
     SET_ALARMS(state, alarms) {
       state.alarms = alarms
     },
-    SET_SELECTED_NODES_ID(state, ids){
+    SET_SELECTED_NODES_ID(state, ids) {
       state.monitoredNodesID = ids
     }
   },
@@ -24,7 +24,7 @@ export default createStore({
       return NodesService.getNodes()
         .then(response => {
           commit("SET_NODES", response.data.node),
-          commit("SET_SELECTED_NODES_ID", response.data.node.map(node => node.id))
+            commit("SET_SELECTED_NODES_ID", response.data.node.map(node => node.id))
         })
         .catch(error => {
           throw (error)
@@ -46,7 +46,7 @@ export default createStore({
   getters: {
     getMonitoredNodes: state => {
       return state.nodes.filter(node => state.monitoredNodesID.includes(node.id));
-    }
+    },
   },
   modules: {},
 });

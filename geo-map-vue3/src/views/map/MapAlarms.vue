@@ -10,7 +10,7 @@
         </select>
         <button v-on:click="submit()">Submit</button>
         <button v-on:click="clearFilters()">Clear Filters</button>
-        <button v-on:click="confirmFilters()">Confirm Filters</button>
+        <button v-on:click="confirmFilters()">Confirm Monitored Nodes</button>
         <button v-on:click="reset()">Reset</button>
       </span>
     </div>
@@ -86,7 +86,18 @@ export default {
     reset() {
       this.$store.dispatch("resetMonitoredNodesID");
     },
-
+    clearFilters() {
+      //TODO: make this smarter
+      this.gridApi.getFilterInstance("id").setModel(null);
+      this.gridApi.getFilterInstance("severity").setModel(null);
+      this.gridApi.getFilterInstance("node").setModel(null);
+      this.gridApi.getFilterInstance("lable").setModel(null);
+      this.gridApi.getFilterInstance("uei").setModel(null);
+      this.gridApi.getFilterInstance("count").setModel(null);
+      this.gridApi.getFilterInstance("lastEventTime").setModel(null);
+      this.gridApi.getFilterInstance("logMessage").setModel(null);
+      this.gridApi.onFilterChanged();
+    },
     getAlarmsFromSelectedNodes() {
       this.selectedNodesLable = this.$store.getters.getMonitoredNodes.map(
         (node) => node.label

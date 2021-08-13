@@ -54,6 +54,7 @@ export default {
       resizable: true,
       enableBrowserTooltips: true,
       floatingFilter: true,
+      filter: "agTextColumnFilter",
     };
     this.columnDefs = [
       {
@@ -74,28 +75,24 @@ export default {
         field: "foreignSource",
         sortable: true,
         headerTooltip: "Foreign Source",
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "FOREIGN ID",
         field: "foreignId",
         sortable: true,
         headerTooltip: "Foreign ID",
-        filter: "agNumberColumnFilter",
       },
       {
         headerName: "LABLE",
         field: "lable",
         sortable: true,
         headerTooltip: "Lable",
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "LABLE SOURCE",
         field: "lableSource",
         sortable: true,
         headerTooltip: "Lable Source",
-        filter: "agTextColumnFilter",
       },
       {
         headerName: "LAST CAPABILITIES SCAN",

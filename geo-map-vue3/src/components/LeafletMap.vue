@@ -11,23 +11,16 @@
       ></l-tile-layer>
       <l-control-layers />
 
-      <l-marker :lat-lng="marker1latlng">
-        <!-- <l-icon :icon-url="iconUrl" :icon-size="iconSize" /> -->
+      <l-marker v-for="(coordinate, index) in nodesWithCoordinate" :key="index" :lat-lng="coordinate">
         <l-popup> popup1 </l-popup>
         <l-tooltip> tooltip1 </l-tooltip>
       </l-marker>
 
-      <l-marker :lat-lng="marker2">
-        <!-- <l-icon :icon-url="iconUrl" :icon-size="iconSize" /> -->
-        <l-popup> popup2 </l-popup>
-        <l-tooltip> tooltip2 </l-tooltip>
-      </l-marker>
-
-      <l-polyline
+      <!-- <l-polyline
         :lat-lngs="[marker1, marker2]"
         color="blue"
         :weight="3"
-      ></l-polyline>
+      ></l-polyline> -->
     </l-map>
   </div>
 </template>
@@ -36,11 +29,10 @@ import {
   LMap,
   LTileLayer,
   LMarker,
-  // LIcon,
   LControlLayers,
   LTooltip,
   LPopup,
-  LPolyline,
+  // LPolyline,
 } from "@vue-leaflet/vue-leaflet";
 import "leaflet/dist/leaflet.css";
 import { mapState } from "vuex";
@@ -50,48 +42,52 @@ export default {
     LMap,
     LTileLayer,
     LMarker,
-    // LIcon,
     LControlLayers,
     LTooltip,
     LPopup,
-    LPolyline,
+    // LPolyline,
   },
   data() {
     return {
       zoom: 4,
       openNMSHeadQuarter: [35.849613, -78.794882],
-      // iconWidth: 25,
-      // iconHeight: 25,
-      nodes: null,
-      marker1: [35.849613, -78.794882],
-      marker2: [45.448795, -75.688529],
     };
   },
   computed: {
-    ...mapState(["selectedNodesID"]),
-    // iconUrl: function () {
-    //   return require("../assets/node.png");
-    // },
-    // iconSize: function () {
-    //   return [this.iconWidth, this.iconHeight];
-    // },
-    marker1latlng: function () {
+    ...mapState(["monitoredNodesID"]),
+    marker1latlng() {
       return [35.849613, -78.794882];
     },
-    marker2latlng: function () {
+    marker2latlng() {
       return [40.714847, -74.048383];
+    },
+    nodesWithCoordinate(){
+      return this.$store.getters.getMonitoredNodes.filter(
+        (node) =>
+          !(
+            node.assetRecord.latitude == null ||
+            node.assetRecord.latitude.length === 0
+          ) &&
+          !(
+            node.assetRecord.longitude == null ||
+            node.assetRecord.longitude.length === 0
+          )
+      ).map((node) => {
+        let coordinate = [];
+        coordinate.push(node.assetRecord.latitude);
+        coordinate.push(node.assetRecord.longitude);
+        return coordinate
+      });
     },
   },
   watch: {
-    selectedNodesID(newValue, oldValue) {
-      console.log(`SelectedNodesID updating from ${oldValue} to ${newValue}`);
+    monitoredNodesID() {
     },
   },
-  methods: {},
-
-  created() {
-
+  methods: {
   },
+
+  created() {},
 };
 </script>
 

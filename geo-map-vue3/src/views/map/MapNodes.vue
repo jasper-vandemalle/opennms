@@ -4,7 +4,7 @@
       <span class="buttons">
         <button v-on:click="clearFilters()">Clear Filters</button>
         <button v-on:click="showTopology()">Show Topology</button>
-        <button v-on:click="confirmFilters()">Confirm Filters</button>
+        <button v-on:click="confirmFilters()">Confirm Monitored Nodes</button>
         <button v-on:click="reset()">Reset</button>
       </span>
     </div>
@@ -48,14 +48,7 @@ export default {
     monitoredNodesID(newValue, oldValue) {
       console.log(`MonitoredNodesID updating from ${oldValue} to ${newValue}`);
       this.gridApi.setRowData(
-        this.$store.getters.getMonitoredNodes.map((node) => ({
-          id: node.id,
-          foreignSource: node.foreignSource,
-          foreignId: node.foreignId,
-          lable: node.label,
-          lableSource: node.labelSource,
-          lastCapabilitiesScan: node.lastCapsdPoll,
-        }))
+        this.getGridRowDataFromMonitoredNodes()
       );
     },
   },
@@ -83,14 +76,29 @@ export default {
     },
     confirmFilters() {
       let ids = [];
-      this.gridApi.forEachNodeAfterFilter(node => ids.push(node.data.id));
-      this.$store.commit("SET_SELECTED_NODES_ID", ids)
+      this.gridApi.forEachNodeAfterFilter((node) => ids.push(node.data.id));
+      this.$store.commit("SET_SELECTED_NODES_ID", ids);
     },
-    showTopology() {
+    showTopology() {},
+    reset() {
+      this.$store.dispatch("resetMonitoredNodesID");
     },
-    reset(){
-      this.$store.dispatch("resetMonitoredNodesID")
-    }
+    getGridRowDataFromMonitoredNodes() {
+      return this.$store.getters.getMonitoredNodes.map((node) => ({
+        id: node.id,
+        foreignSource: node.foreignSource,
+        foreignId: node.foreignId,
+        lable: node.label,
+        lableSource: node.labelSource,
+        lastCapabilitiesScan: node.lastCapsdPoll,
+        // primaryInterface: ,
+        sysObjectid: node.sysObjectId,
+        sysName: node.sysName,
+        sysDescription:  node.sysDescription,
+        sysContact: node.sysContact,
+        sysLocation: node.sysLocation
+      }));
+    },
   },
 
   beforeMount() {
@@ -193,16 +201,7 @@ export default {
   },
 
   created() {
-    console.log("I'm in MapNodes page");
-    console.log(this.$store.state.selectedNodesID);
-    this.rowData = this.$store.getters.getMonitoredNodes.map((node) => ({
-      id: node.id,
-      foreignSource: node.foreignSource,
-      foreignId: node.foreignId,
-      lable: node.label,
-      lableSource: node.labelSource,
-      lastCapabilitiesScan: node.lastCapsdPoll,
-    }));
+    this.rowData = this.getGridRowDataFromMonitoredNodes();
   },
 };
 </script>
