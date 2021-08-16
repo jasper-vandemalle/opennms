@@ -4,7 +4,7 @@
       <span class="buttons">
         <button v-on:click="clearFilters()">Clear Filters</button>
         <button v-on:click="showTopology()">Show Topology</button>
-        <button v-on:click="confirmFilters()">Confirm Monitored Nodes</button>
+        <button v-on:click="confirmFilters()">Confirm Interested Nodes</button>
         <button v-on:click="reset()">Reset</button>
       </span>
     </div>
@@ -42,12 +42,12 @@ export default {
       gridColumnApi: null,
     };
   },
-  computed: mapState(["monitoredNodesID"]),
+  computed: mapState(["interestedNodesID"]),
   watch: {
-    monitoredNodesID(newValue, oldValue) {
-      console.log(`MonitoredNodesID updating from ${oldValue} to ${newValue}`);
+    interestedNodesID(newValue, oldValue) {
+      console.log(`InterestedNodesID updating from ${oldValue} to ${newValue}`);
       this.gridApi.setRowData(
-        this.getGridRowDataFromMonitoredNodes()
+        this.getGridRowDataFromInterestedNodes()
       );
     },
   },
@@ -76,14 +76,14 @@ export default {
     confirmFilters() {
       let ids = [];
       this.gridApi.forEachNodeAfterFilter((node) => ids.push(node.data.id));
-      this.$store.commit("SET_SELECTED_NODES_ID", ids);
+      this.$store.commit("SET_INTERESTED_NODES_ID", ids);
     },
     showTopology() {},
     reset() {
-      this.$store.dispatch("resetMonitoredNodesID");
+      this.$store.dispatch("resetInterestedNodesID");
     },
-    getGridRowDataFromMonitoredNodes() {
-      return this.$store.getters.getMonitoredNodes.map((node) => ({
+  getGridRowDataFromInterestedNodes() {
+      return this.$store.getters.getInterestedNodes.map((node) => ({
         id: node.id,
         foreignSource: node.foreignSource,
         foreignId: node.foreignId,
@@ -200,7 +200,7 @@ export default {
   },
 
   created() {
-    this.rowData = this.getGridRowDataFromMonitoredNodes();
+    this.rowData = this.getGridRowDataFromInterestedNodes();
   },
 };
 </script>

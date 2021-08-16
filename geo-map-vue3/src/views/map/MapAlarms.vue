@@ -10,7 +10,7 @@
         </select>
         <button v-on:click="submit()">Submit</button>
         <button v-on:click="clearFilters()">Clear Filters</button>
-        <button v-on:click="confirmFilters()">Confirm Monitored Nodes</button>
+        <button v-on:click="confirmFilters()">Confirm Interested Nodes</button>
         <button v-on:click="reset()">Reset</button>
       </span>
     </div>
@@ -52,10 +52,10 @@ export default {
     "ag-grid-vue": AgGridVue,
   },
 
-  computed: mapState(["monitoredNodesID"]),
+  computed: mapState(["interestedNodesID"]),
   watch: {
-    monitoredNodesID(newValue, oldValue) {
-      console.log(`MonitoredNodesID updating from ${oldValue} to ${newValue}`),
+    interestedNodesID(newValue, oldValue) {
+      console.log(`InterestedNodesID updating from ${oldValue} to ${newValue}`),
         this.getAlarmsFromSelectedNodes();
     },
   },
@@ -81,10 +81,10 @@ export default {
       ids = this.$store.state.nodes
         .filter((node) => this.distictNodesLable.includes(node.label))
         .map((node) => node.id);
-      this.$store.commit("SET_SELECTED_NODES_ID", ids);
+      this.$store.commit("SET_INTERESTED_NODES_ID", ids);
     },
     reset() {
-      this.$store.dispatch("resetMonitoredNodesID");
+      this.$store.dispatch("resetInterestedNodesID");
     },
     clearFilters() {
       //TODO: make this smarter
@@ -99,7 +99,7 @@ export default {
       this.gridApi.onFilterChanged();
     },
     getAlarmsFromSelectedNodes() {
-      this.selectedNodesLable = this.$store.getters.getMonitoredNodes.map(
+      this.selectedNodesLable = this.$store.getters.getInterestedNodes.map(
         (node) => node.label
       );
       this.alarms = this.$store.state.alarms.filter((alarm) =>

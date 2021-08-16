@@ -54,9 +54,9 @@ export default {
     };
   },
   computed: {
-    ...mapState(["monitoredNodesID"]),
+    ...mapState(["interestedNodesID"]),
     nodesWithCoordinate(){
-      return this.$store.getters.getMonitoredNodes.filter(
+      return this.$store.getters.getInterestedNodes.filter(
         (node) =>
           !(
             node.assetRecord.latitude == null ||
@@ -75,7 +75,7 @@ export default {
     },
   },
   watch: {
-    monitoredNodesID() {
+    interestedNodesID() {
     },
   },
   methods: {

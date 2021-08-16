@@ -7,7 +7,7 @@ export default createStore({
   state: {
     nodes: [],
     alarms: [],
-    monitoredNodesID: [],
+    interestedNodesID: [],
     edges: []
   },
   mutations: {
@@ -17,8 +17,8 @@ export default createStore({
     SET_ALARMS(state, alarms) {
       state.alarms = alarms
     },
-    SET_SELECTED_NODES_ID(state, ids) {
-      state.monitoredNodesID = ids
+    SET_INTERESTED_NODES_ID(state, ids) {
+      state.interestedNodesID = ids
     },
     SET_NODE_EDGES(state, edges) {
       state.edges = edges
@@ -29,7 +29,7 @@ export default createStore({
       return NodesService.getNodes()
         .then(response => {
           commit("SET_NODES", response.data.node),
-            commit("SET_SELECTED_NODES_ID", response.data.node.map(node => node.id))
+            commit("SET_INTERESTED_NODES_ID", response.data.node.map(node => node.id))
         })
         .catch(error => {
           throw (error)
@@ -44,8 +44,8 @@ export default createStore({
           throw (error)
         })
     },
-    resetMonitoredNodesID({ commit }) {
-      commit("SET_SELECTED_NODES_ID", this.state.nodes.map(node => node.id))
+    resetInterestedNodesID({ commit }) {
+      commit("SET_INTERESTED_NODES_ID", this.state.nodes.map(node => node.id))
     },
     fetchNodesGraph({ commit }) {
       return GraphService.getNodesGraph()
@@ -65,8 +65,8 @@ export default createStore({
     }
   },
   getters: {
-    getMonitoredNodes: state => {
-      return state.nodes.filter(node => state.monitoredNodesID.includes(node.id));
+    getInterestedNodes: state => {
+      return state.nodes.filter(node => state.interestedNodesID.includes(node.id));
     },
   },
   modules: {},
