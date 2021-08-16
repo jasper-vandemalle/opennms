@@ -1,12 +1,14 @@
 import { createStore } from "vuex";
 import AlarmsService from "@/services/AlarmsService.js";
 import NodesService from "@/services/NodesService.js";
+import GraphService from "@/services/GraphService.js";
 
 export default createStore({
   state: {
     nodes: [],
     alarms: [],
-    monitoredNodesID: []
+    monitoredNodesID: [],
+    edges: []
   },
   mutations: {
     SET_NODES(state, nodes) {
@@ -17,6 +19,9 @@ export default createStore({
     },
     SET_SELECTED_NODES_ID(state, ids) {
       state.monitoredNodesID = ids
+    },
+    SET_NODE_EDGES(state, edges) {
+      state.edges = edges
     }
   },
   actions: {
@@ -41,6 +46,22 @@ export default createStore({
     },
     resetMonitoredNodesID({ commit }) {
       commit("SET_SELECTED_NODES_ID", this.state.nodes.map(node => node.id))
+    },
+    fetchNodesGraph({ commit }) {
+      return GraphService.getNodesGraph()
+        .then(response => {
+          let edges = []
+          response.data.edges.forEach((e) => {
+            let edge = []
+            edge.push(e.source.id)
+            edge.push(e.target.id)
+            edges.push(edge)
+          });
+          commit("SET_NODE_EDGES", edges)
+        })
+        .catch(error => {
+          throw (error)
+        })
     }
   },
   getters: {

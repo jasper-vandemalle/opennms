@@ -29,6 +29,7 @@ export default {
   created() {
     this.$store.dispatch("fetchNodes"); 
     this.$store.dispatch("fetchAlarms");
+    this.$store.dispatch("fetchNodesGraph");
   },
 };
 </script>

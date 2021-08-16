@@ -55,12 +55,6 @@ export default {
   },
   computed: {
     ...mapState(["monitoredNodesID"]),
-    marker1latlng() {
-      return [35.849613, -78.794882];
-    },
-    marker2latlng() {
-      return [40.714847, -74.048383];
-    },
     nodesWithCoordinate(){
       return this.$store.getters.getMonitoredNodes.filter(
         (node) =>
