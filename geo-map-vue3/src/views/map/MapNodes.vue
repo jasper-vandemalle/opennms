@@ -114,7 +114,8 @@ export default {
         field: "id",
         sortable: true,
         headerTooltip: "ID",
-        filter: "agNumberColumnFilter",
+        floatingFilter: false,
+        // filter: "agNumberColumnFilter",
         comparator: (valueA, valueB) => {
           return valueA - valueB;
         },

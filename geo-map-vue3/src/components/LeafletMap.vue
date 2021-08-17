@@ -11,16 +11,22 @@
       ></l-tile-layer>
       <l-control-layers />
 
-      <l-marker v-for="(coordinate, index) in nodesWithCoordinate" :key="index" :lat-lng="coordinate">
-        <l-popup> popup1 </l-popup>
-        <l-tooltip> tooltip1 </l-tooltip>
+      <l-marker
+        v-for="(node, index) in interestedNodesWithCoordinate"
+        :key="index"
+        :lat-lng="getCoordinateFromNode(node)"
+      >
+        <l-popup> {{ node.label }} </l-popup>
+        <!-- <l-tooltip> tooltip1 </l-tooltip> -->
       </l-marker>
 
-      <!-- <l-polyline
-        :lat-lngs="[marker1, marker2]"
+      <l-polyline
+        v-for="(coordinatePair, index) in edges"
+        :key="index"
+        :lat-lngs="[coordinatePair[0], coordinatePair[1]]"
         color="blue"
         :weight="3"
-      ></l-polyline> -->
+      ></l-polyline>
     </l-map>
   </div>
 </template>
@@ -30,9 +36,9 @@ import {
   LTileLayer,
   LMarker,
   LControlLayers,
-  LTooltip,
+  // LTooltip,
   LPopup,
-  // LPolyline,
+  LPolyline,
 } from "@vue-leaflet/vue-leaflet";
 import "leaflet/dist/leaflet.css";
 import { mapState } from "vuex";
@@ -43,9 +49,9 @@ export default {
     LTileLayer,
     LMarker,
     LControlLayers,
-    LTooltip,
+    // LTooltip,
     LPopup,
-    // LPolyline,
+    LPolyline,
   },
   data() {
     return {
@@ -55,7 +61,8 @@ export default {
   },
   computed: {
     ...mapState(["interestedNodesID"]),
-    nodesWithCoordinate(){
+
+    interestedNodesWithCoordinate() {
       return this.$store.getters.getInterestedNodes.filter(
         (node) =>
           !(
@@ -66,19 +73,42 @@ export default {
             node.assetRecord.longitude == null ||
             node.assetRecord.longitude.length === 0
           )
-      ).map((node) => {
-        let coordinate = [];
-        coordinate.push(node.assetRecord.latitude);
-        coordinate.push(node.assetRecord.longitude);
-        return coordinate
+      );
+    },
+
+    edges() {
+      let ids = this.getIDsofInterestedNodesWithCoordinate();
+      let interestedNodesIDCoordinateMap = this.getInterestedNodesIDCoordinateMap();
+      
+      return this.$store.state.edges.filter(edge => ids.includes(edge[0]) && ids.includes(edge[1]))
+      .map((edge) => {
+        let edgeCoordinatesPair = [];
+        edgeCoordinatesPair.push(interestedNodesIDCoordinateMap.get(edge[0]));
+        edgeCoordinatesPair.push(interestedNodesIDCoordinateMap.get(edge[1]));
+        return edgeCoordinatesPair
       });
     },
   },
   watch: {
-    interestedNodesID() {
-    },
+    interestedNodesID() {},
   },
   methods: {
+    getCoordinateFromNode(node) {
+      let coordinate = [];
+      coordinate.push(node.assetRecord.latitude);
+      coordinate.push(node.assetRecord.longitude);
+      return coordinate;
+    },
+    getInterestedNodesIDCoordinateMap() {
+      var map = new Map();
+      this.interestedNodesWithCoordinate.forEach((node) => {
+        map.set(node.id, this.getCoordinateFromNode(node));
+      });
+      return map;
+    },
+    getIDsofInterestedNodesWithCoordinate(){
+      return this.interestedNodesWithCoordinate.map((node) => node.id); 
+    }
   },
 
   created() {},
