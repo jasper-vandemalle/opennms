@@ -12,7 +12,7 @@
       <l-control-layers />
 
       <l-marker
-        v-for="(node, index) in interestedNodesWithCoordinate"
+        v-for="(node, index) in interestedNodes"
         :key="index"
         :lat-lng="getCoordinateFromNode(node)"
       >
@@ -61,23 +61,12 @@ export default {
   },
   computed: {
     ...mapState(["interestedNodesID"]),
-
-    interestedNodesWithCoordinate() {
-      return this.$store.getters.getInterestedNodes.filter(
-        (node) =>
-          !(
-            node.assetRecord.latitude == null ||
-            node.assetRecord.latitude.length === 0
-          ) &&
-          !(
-            node.assetRecord.longitude == null ||
-            node.assetRecord.longitude.length === 0
-          )
-      );
-    },
+    interestedNodes(){
+      return this.$store.getters.getInterestedNodes;
+    }
 
     // edges() {
-    //   let ids = this.getIDsofInterestedNodesWithCoordinate();
+    //   let ids = this.$store.getters.getInterestedNodesID;
     //   let interestedNodesIDCoordinateMap = this.getInterestedNodesIDCoordinateMap();
       
     //   return this.$store.state.edges.filter(edge => ids.includes(edge[0]) && ids.includes(edge[1]))
@@ -90,7 +79,7 @@ export default {
     // },
   },
   watch: {
-    interestedNodesID(newValue, oldValue) {console.log(`InterestedNodesID updating from ${oldValue} to ${newValue}`);},
+    interestedNodesID() {},
   },
   methods: {
     getCoordinateFromNode(node) {
@@ -101,14 +90,11 @@ export default {
     },
     getInterestedNodesIDCoordinateMap() {
       var map = new Map();
-      this.interestedNodesWithCoordinate.forEach((node) => {
+      this.interestedNodes.forEach((node) => {
         map.set(node.id, this.getCoordinateFromNode(node));
       });
       return map;
     },
-    getIDsofInterestedNodesWithCoordinate(){
-      return this.interestedNodesWithCoordinate.map((node) => node.id); 
-    }
   },
 
   created() {},
