@@ -4,14 +4,14 @@ import GraphService from "@/services/GraphService.js";
 
 export default {
     state: {
-        nodes: [],
+        nodesWithCoordinates: [],
         alarms: [],
         interestedNodesID: [],
         edges: []
     },
     mutations: {
         SET_NODES(state, nodes) {
-            state.nodes = nodes
+            state.nodesWithCoordinates = nodes
         },
         SET_ALARMS(state, alarms) {
             state.alarms = alarms
@@ -54,9 +54,7 @@ export default {
                 })
         },
         resetInterestedNodesID({ commit, state }) {
-            console.log(state.nodes)
-            commit("SET_INTERESTED_NODES_ID", state.nodes.map(node => node.id))
-            console.log(state.interestedNodesID)
+            commit("SET_INTERESTED_NODES_ID", state.nodesWithCoordinates.map(node => node.id))
         },
         fetchNodesGraph({ commit }) {
             return GraphService.getNodesGraph()
@@ -80,7 +78,7 @@ export default {
             return state.interestedNodesID;
         },
         getInterestedNodes: state => {
-            return state.nodes.filter(node => state.interestedNodesID.includes(node.id));
+            return state.nodesWithCoordinates.filter(node => state.interestedNodesID.includes(node.id));
         },
         getAlarmsFromSelectedNodes: (state, getters) => {
             let selectedNodesLable = getters.getInterestedNodes.map(
