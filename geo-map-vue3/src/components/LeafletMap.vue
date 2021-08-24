@@ -20,13 +20,13 @@
         <!-- <l-tooltip> tooltip1 </l-tooltip> -->
       </l-marker>
 
-      <l-polyline
+      <!-- <l-polyline
         v-for="(coordinatePair, index) in edges"
         :key="index"
         :lat-lngs="[coordinatePair[0], coordinatePair[1]]"
         color="blue"
         :weight="3"
-      ></l-polyline>
+      ></l-polyline> -->
     </l-map>
   </div>
 </template>
@@ -38,7 +38,7 @@ import {
   LControlLayers,
   // LTooltip,
   LPopup,
-  LPolyline,
+  // LPolyline,
 } from "@vue-leaflet/vue-leaflet";
 import "leaflet/dist/leaflet.css";
 import { mapState } from "vuex";
@@ -51,7 +51,7 @@ export default {
     LControlLayers,
     // LTooltip,
     LPopup,
-    LPolyline,
+    // LPolyline,
   },
   data() {
     return {
@@ -76,21 +76,21 @@ export default {
       );
     },
 
-    edges() {
-      let ids = this.getIDsofInterestedNodesWithCoordinate();
-      let interestedNodesIDCoordinateMap = this.getInterestedNodesIDCoordinateMap();
+    // edges() {
+    //   let ids = this.getIDsofInterestedNodesWithCoordinate();
+    //   let interestedNodesIDCoordinateMap = this.getInterestedNodesIDCoordinateMap();
       
-      return this.$store.state.edges.filter(edge => ids.includes(edge[0]) && ids.includes(edge[1]))
-      .map((edge) => {
-        let edgeCoordinatesPair = [];
-        edgeCoordinatesPair.push(interestedNodesIDCoordinateMap.get(edge[0]));
-        edgeCoordinatesPair.push(interestedNodesIDCoordinateMap.get(edge[1]));
-        return edgeCoordinatesPair
-      });
-    },
+    //   return this.$store.state.edges.filter(edge => ids.includes(edge[0]) && ids.includes(edge[1]))
+    //   .map((edge) => {
+    //     let edgeCoordinatesPair = [];
+    //     edgeCoordinatesPair.push(interestedNodesIDCoordinateMap.get(edge[0]));
+    //     edgeCoordinatesPair.push(interestedNodesIDCoordinateMap.get(edge[1]));
+    //     return edgeCoordinatesPair
+    //   });
+    // },
   },
   watch: {
-    interestedNodesID() {},
+    interestedNodesID(newValue, oldValue) {console.log(`InterestedNodesID updating from ${oldValue} to ${newValue}`);},
   },
   methods: {
     getCoordinateFromNode(node) {

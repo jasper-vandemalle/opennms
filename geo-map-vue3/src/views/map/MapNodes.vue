@@ -4,7 +4,7 @@
       <span class="buttons">
         <button v-on:click="clearFilters()">Clear Filters</button>
         <!-- <button v-on:click="showTopology()">Show Topology</button> -->
-        <button v-on:click="confirmFilters()">Confirm Interested Nodes</button>
+        <button v-on:click="confirmFilters()">Apply filter</button>
         <button v-on:click="reset()">Reset</button>
       </span>
     </div>
@@ -27,7 +27,6 @@
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
-import { mapState } from "vuex";
 export default {
   components: {
     "ag-grid-vue": AgGridVue,
@@ -42,7 +41,11 @@ export default {
       gridColumnApi: null,
     };
   },
-  computed: mapState(["interestedNodesID"]),
+  computed: {
+    interestedNodesID () {
+      return this.$store.getters.getInterestedNodesID
+    } 
+  },
   watch: {
     interestedNodesID(newValue, oldValue) {
       console.log(`InterestedNodesID updating from ${oldValue} to ${newValue}`);

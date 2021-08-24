@@ -10,7 +10,7 @@
         </select>
         <button v-on:click="submit()">Submit</button>
         <button v-on:click="clearFilters()">Clear Filters</button>
-        <button v-on:click="confirmFilters()">Confirm Interested Nodes</button>
+        <button v-on:click="confirmFilters()">Apply filter</button>
         <button v-on:click="reset()">Reset</button>
       </span>
     </div>
@@ -34,7 +34,6 @@
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
-import { mapState } from "vuex";
 
 export default {
   data() {
@@ -52,7 +51,11 @@ export default {
     "ag-grid-vue": AgGridVue,
   },
 
-  computed: mapState(["interestedNodesID"]),
+  computed: {
+    interestedNodesID () {
+      return this.$store.getters.getInterestedNodesID
+    } 
+  },
   watch: {
     interestedNodesID(newValue, oldValue) {
       console.log(`InterestedNodesID updating from ${oldValue} to ${newValue}`),
@@ -99,12 +102,7 @@ export default {
       this.gridApi.onFilterChanged();
     },
     getAlarmsFromSelectedNodes() {
-      this.selectedNodesLable = this.$store.getters.getInterestedNodes.map(
-        (node) => node.label
-      );
-      this.alarms = this.$store.state.alarms.filter((alarm) =>
-        this.selectedNodesLable.includes(alarm.nodeLabel)
-      );
+      this.alarms = this.$store.getters.getAlarmsFromSelectedNodes;
       this.rowData = this.alarms.map((alarm) => ({
         id: alarm.id,
         severity: alarm.severity,
