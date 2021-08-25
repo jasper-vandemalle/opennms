@@ -14,10 +14,11 @@
   </splitpanes>
 </template>
 
-<script>
+<script >
 import LeafletMap from "@/components/LeafletMap.vue";
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
+import { useStore } from "vuex";
 
 export default {
   name: "Map",
@@ -26,10 +27,12 @@ export default {
     Splitpanes,
     Pane,
   },
-  created() {
-    this.$store.dispatch("mapModule/fetchNodes"); 
-    this.$store.dispatch("mapModule/fetchAlarms");
-    this.$store.dispatch("mapModule/fetchNodesGraph");
+
+  setup() {
+    const store = useStore();
+    store.dispatch("mapModule/fetchNodes");
+    store.dispatch("mapModule/fetchAlarms");
+    store.dispatch("mapModule/fetchNodesGraph");
   },
 };
 </script>
