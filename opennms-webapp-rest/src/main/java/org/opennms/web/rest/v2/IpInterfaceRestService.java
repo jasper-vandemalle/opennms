@@ -36,7 +36,9 @@ import java.util.Set;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.jaxrs.ext.search.SearchBean;
@@ -44,13 +46,16 @@ import org.opennms.core.config.api.JaxbListWrapper;
 import org.opennms.core.criteria.Alias.JoinType;
 import org.opennms.core.criteria.CriteriaBuilder;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
+import org.opennms.netmgt.model.OnmsEvent;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsIpInterfaceList;
+import org.opennms.web.rest.model.v2.EventDTO;
 import org.opennms.web.rest.support.Aliases;
 import org.opennms.web.rest.support.CriteriaBehavior;
 import org.opennms.web.rest.support.CriteriaBehaviors;
 import org.opennms.web.rest.support.SearchProperties;
 import org.opennms.web.rest.support.SearchProperty;
+import org.opennms.web.rest.v2.api.IpInterfaceRestApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,17 +69,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Path("ipinterfaces")
 @Transactional
-public class IpInterfaceRestService extends AbstractDaoRestService<OnmsIpInterface,SearchBean,Integer,String> {
+public class IpInterfaceRestService extends AbstractDaoRestServiceWithDTO<OnmsIpInterface, OnmsIpInterface,SearchBean,Integer,String>implements IpInterfaceRestApi {
 
     @Autowired
     private IpInterfaceDao m_dao;
 
-    @Override
+
     protected IpInterfaceDao getDao() {
         return m_dao;
     }
 
-    @Override
+
     protected Class<OnmsIpInterface> getDaoClass() {
         return OnmsIpInterface.class;
     }
@@ -136,8 +141,21 @@ public class IpInterfaceRestService extends AbstractDaoRestService<OnmsIpInterfa
         } else if (addresses.size() == 1) {
             final OnmsIpInterface iface = addresses.get(0);
             getDao().initialize(iface.getSnmpInterface());
-			return iface;
+            return iface;
         }
         throw new WebApplicationException("More than one IP address matches " + ipAddress, Status.BAD_REQUEST);
     }
+
+    public OnmsIpInterface mapEntityToDTO(OnmsIpInterface entity) {
+        return entity;
+    }
+
+    public OnmsIpInterface mapDTOToEntity(OnmsIpInterface dto) {
+        return dto;
+    }
+
+    /*@Override
+    public Response create(SecurityContext securityContext, UriInfo uriInfo, OnmsIpInterface object) {
+        return new OnmsIpInterface();
+    }*/
 }
