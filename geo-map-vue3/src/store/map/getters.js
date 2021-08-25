@@ -15,8 +15,13 @@ const getAlarmsFromSelectedNodes = (state, getters) => {
     )
 }
 
+const getEdges = state => {
+    return state.edges;
+}
+
 export default {
     getInterestedNodesID,
     getInterestedNodes,
-    getAlarmsFromSelectedNodes
+    getAlarmsFromSelectedNodes,
+    getEdges
 }
