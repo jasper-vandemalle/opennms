@@ -79,7 +79,7 @@ export default {
     confirmFilters() {
       let ids = [];
       this.gridApi.forEachNodeAfterFilter((node) => ids.push(node.data.id));
-      this.$store.commit("SET_INTERESTED_NODES_ID", ids);
+      this.$store.dispatch("setInterestedNodesId", ids);
     },
     showTopology() {},
     reset() {

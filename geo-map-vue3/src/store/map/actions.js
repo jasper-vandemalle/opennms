@@ -54,7 +54,7 @@ const fetchNodesGraph = ({ commit }) =>{
         })
 }
 
-const setInterestedNodesId = ({ commit, ids}) =>{
+const setInterestedNodesId = ({ commit }, ids) =>{
     commit("SET_INTERESTED_NODES_ID", ids)
 }
 

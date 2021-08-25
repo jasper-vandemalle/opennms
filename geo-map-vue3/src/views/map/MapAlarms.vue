@@ -84,7 +84,7 @@ export default {
       ids = this.$store.getters.getInterestedNodes
         .filter((node) => this.distictNodesLable.includes(node.label))
         .map((node) => node.id);
-      this.$store.commit("SET_INTERESTED_NODES_ID", ids);
+      this.$store.dispatch("setInterestedNodesId", ids);
     },
     reset() {
       this.$store.dispatch("resetInterestedNodesID");
