@@ -81,7 +81,7 @@ export default {
       });
       this.distictNodesLable = [...new Set(nodesLable)];
       let ids = [];
-      ids = this.$store.state.nodes
+      ids = this.$store.getters.getInterestedNodes
         .filter((node) => this.distictNodesLable.includes(node.label))
         .map((node) => node.id);
       this.$store.commit("SET_INTERESTED_NODES_ID", ids);

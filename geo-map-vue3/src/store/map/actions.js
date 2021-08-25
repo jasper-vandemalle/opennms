@@ -54,10 +54,15 @@ const fetchNodesGraph = ({ commit }) =>{
         })
 }
 
+const setInterestedNodesId = ({ commit, ids}) =>{
+    commit("SET_INTERESTED_NODES_ID", ids)
+}
+
 
 export default {
     fetchNodes,
     fetchAlarms,
     resetInterestedNodesID,
-    fetchNodesGraph
+    fetchNodesGraph,
+    setInterestedNodesId
 }
