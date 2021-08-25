@@ -43,7 +43,7 @@ export default {
   },
   computed: {
     interestedNodesID () {
-      return this.$store.getters.getInterestedNodesID
+      return this.$store.getters['mapModule/getInterestedNodesID']
     } 
   },
   watch: {
@@ -79,14 +79,14 @@ export default {
     confirmFilters() {
       let ids = [];
       this.gridApi.forEachNodeAfterFilter((node) => ids.push(node.data.id));
-      this.$store.dispatch("setInterestedNodesId", ids);
+      this.$store.dispatch("mapModule/setInterestedNodesId", ids);
     },
     showTopology() {},
     reset() {
-      this.$store.dispatch("resetInterestedNodesID");
+      this.$store.dispatch("mapModule/resetInterestedNodesID");
     },
   getGridRowDataFromInterestedNodes() {
-      return this.$store.getters.getInterestedNodes.map((node) => ({
+      return this.$store.getters['mapModule/getInterestedNodes'].map((node) => ({
         id: node.id,
         foreignSource: node.foreignSource,
         foreignId: node.foreignId,

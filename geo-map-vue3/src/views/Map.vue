@@ -27,9 +27,9 @@ export default {
     Pane,
   },
   created() {
-    this.$store.dispatch("fetchNodes"); 
-    this.$store.dispatch("fetchAlarms");
-    this.$store.dispatch("fetchNodesGraph");
+    this.$store.dispatch("mapModule/fetchNodes"); 
+    this.$store.dispatch("mapModule/fetchAlarms");
+    this.$store.dispatch("mapModule/fetchNodesGraph");
   },
 };
 </script>

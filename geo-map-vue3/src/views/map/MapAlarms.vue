@@ -53,7 +53,7 @@ export default {
 
   computed: {
     interestedNodesID () {
-      return this.$store.getters.getInterestedNodesID
+      return this.$store.getters['mapModule/getInterestedNodesID']
     } 
   },
   watch: {
@@ -81,13 +81,13 @@ export default {
       });
       this.distictNodesLable = [...new Set(nodesLable)];
       let ids = [];
-      ids = this.$store.getters.getInterestedNodes
+      ids = this.$store.getters['mapModule/getInterestedNodes']
         .filter((node) => this.distictNodesLable.includes(node.label))
         .map((node) => node.id);
-      this.$store.dispatch("setInterestedNodesId", ids);
+      this.$store.dispatch("mapModule/setInterestedNodesId", ids);
     },
     reset() {
-      this.$store.dispatch("resetInterestedNodesID");
+      this.$store.dispatch("mapModule/resetInterestedNodesID");
     },
     clearFilters() {
       //TODO: make this smarter
@@ -102,7 +102,7 @@ export default {
       this.gridApi.onFilterChanged();
     },
     getAlarmsFromSelectedNodes() {
-      this.alarms = this.$store.getters.getAlarmsFromSelectedNodes;
+      this.alarms = this.$store.getters['mapModule/getAlarmsFromSelectedNodes'];
       this.rowData = this.alarms.map((alarm) => ({
         id: alarm.id,
         severity: alarm.severity,

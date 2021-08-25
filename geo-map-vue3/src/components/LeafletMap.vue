@@ -60,9 +60,9 @@ export default {
     };
   },
   computed: {
-    ...mapState(["interestedNodesID"]),
+    ...mapState(["mapModule/interestedNodesID"]),
     interestedNodes(){
-      return this.$store.getters.getInterestedNodes;
+      return this.$store.getters['mapModule/getInterestedNodes'];
     }
 
     // edges() {
