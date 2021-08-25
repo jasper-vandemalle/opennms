@@ -34,12 +34,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ResourceContext;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -54,6 +51,7 @@ import org.opennms.core.criteria.restrictions.Restrictions;
 import org.opennms.netmgt.dao.api.MonitoringLocationDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.events.api.EventProxy;
+import org.opennms.netmgt.events.api.EventProxyException;
 import org.opennms.netmgt.model.OnmsMetaDataList;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsNodeList;
@@ -68,12 +66,14 @@ import org.opennms.web.rest.support.MultivaluedMapImpl;
 import org.opennms.web.rest.support.RedirectHelper;
 import org.opennms.web.rest.support.SearchProperties;
 import org.opennms.web.rest.support.SearchProperty;
+import org.opennms.web.rest.v2.api.NodeRestApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.MessageFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Basic Web Service using REST for {@link OnmsNode} entity
@@ -82,9 +82,8 @@ import org.springframework.transaction.annotation.Transactional;
  * @author <a href="agalue@opennms.org">Alejandro Galue</a>
  */
 @Component
-@Path("nodes")
 @Transactional
-public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,Integer,String> {
+public class NodeRestService implements NodeRestApi {
 
     private static final Logger LOG = LoggerFactory.getLogger(NodeRestService.class);
 
@@ -98,23 +97,19 @@ public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,
     @Qualifier("eventProxy")
     private EventProxy m_eventProxy;
 
-    @Override
-    protected NodeDao getDao() {
+    private NodeDao getDao() {
         return m_dao;
     }
 
-    @Override
-    protected Class<OnmsNode> getDaoClass() {
+    private Class<OnmsNode> getDaoClass() {
         return OnmsNode.class;
     }
 
-    @Override
-    protected Class<SearchBean> getQueryBeanClass() {
+    private Class<SearchBean> getQueryBeanClass() {
         return SearchBean.class;
     }
 
-    @Override
-    protected CriteriaBuilder getCriteriaBuilder(UriInfo uriInfo) {
+    private CriteriaBuilder getCriteriaBuilder(UriInfo uriInfo) {
         final CriteriaBuilder builder = new CriteriaBuilder(OnmsNode.class, Aliases.node.toString());
 
         // 1st level JOINs
@@ -141,13 +136,11 @@ public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,
         return builder;
     }
 
-    @Override
-    protected Set<SearchProperty> getQueryProperties() {
+    private Set<SearchProperty> getQueryProperties() {
         return SearchProperties.NODE_SERVICE_PROPERTIES;
     }
 
-    @Override
-    protected Map<String,CriteriaBehavior<?>> getCriteriaBehaviors() {
+    private Map<String,CriteriaBehavior<?>> getCriteriaBehaviors() {
         Map<String,CriteriaBehavior<?>> map = new HashMap<>();
 
         // Root alias
@@ -201,12 +194,10 @@ public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,
         return map;
     }
 
-    @Override
-    protected JaxbListWrapper<OnmsNode> createListWrapper(Collection<OnmsNode> list) {
+    private JaxbListWrapper<OnmsNode> createListWrapper(Collection<OnmsNode> list) {
         return new OnmsNodeList(list);
     }
 
-    @Override
     public Response doCreate(final SecurityContext securityContext, final UriInfo uriInfo, final OnmsNode object) {
         if (object == null) {
             throw getException(Status.BAD_REQUEST, "Node object cannot be null");
@@ -227,49 +218,57 @@ public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,
         return Response.created(RedirectHelper.getRedirectUri(uriInfo, id)).build();
     }
 
-    @Override
-    protected Response doUpdateProperties(SecurityContext securityContext, UriInfo uriInfo, OnmsNode targetObject, MultivaluedMapImpl params) {
+    private Response doUpdateProperties(SecurityContext securityContext, UriInfo uriInfo, OnmsNode targetObject, MultivaluedMapImpl params) {
         RestUtils.setBeanProperties(targetObject, params);
         getDao().update(targetObject);
         return Response.noContent().build();
     }
 
-    @Override
-    protected void doDelete(SecurityContext securityContext, UriInfo uriInfo, OnmsNode node) {
+    private void doDelete(SecurityContext securityContext, UriInfo uriInfo, OnmsNode node) {
         getDao().delete(node);
         final Event e = EventUtils.createDeleteNodeEvent("ReST", node.getId(), -1L);
         sendEvent(e);
     }
 
-    @Override
-    protected OnmsNode doGet(UriInfo uriInfo, String id) {
+    private OnmsNode doGet(UriInfo uriInfo, String id) {
         return getDao().get(id);
     }
 
-    @Path("{nodeCriteria}/ipinterfaces")
-    public NodeIpInterfacesRestService getIpInterfaceResource(@Context final ResourceContext context) {
+    private void sendEvent(final Event event) {
+        try {
+            m_eventProxy.send(event);
+        } catch (final EventProxyException e) {
+            throw getException(Status.INTERNAL_SERVER_ERROR, "Cannot send event {} : {}", event.getUei(), e.getMessage());
+        }
+    }
+
+    private WebApplicationException getException(final Status status, String msg, String... params) throws WebApplicationException {
+        if (params != null) msg = MessageFormatter.arrayFormat(msg, params).getMessage();
+        LOG.error(msg);
+        return new WebApplicationException(Response.status(status).type(MediaType.TEXT_PLAIN).entity(msg).build());
+    }
+    @Override
+    public NodeIpInterfacesRestService getIpInterfaceResource(ResourceContext context) {
         return context.getResource(NodeIpInterfacesRestService.class);
     }
 
-    @Path("{nodeCriteria}/snmpinterfaces")
-    public NodeSnmpInterfacesRestService getSnmpInterfaceResource(@Context final ResourceContext context) {
+    @Override
+    public NodeSnmpInterfacesRestService getSnmpInterfaceResource(ResourceContext context) {
         return context.getResource(NodeSnmpInterfacesRestService.class);
     }
 
-    @Path("{nodeCriteria}/hardwareInventory")
-    public NodeHardwareInventoryRestService getHardwareInventoryResource(@Context final ResourceContext context) {
+    @Override
+    public NodeHardwareInventoryRestService getHardwareInventoryResource(ResourceContext context) {
         return context.getResource(NodeHardwareInventoryRestService.class);
     }
 
-    @Path("{nodeCriteria}/categories")
-    public NodeCategoriesRestService getCategoriesResource(@Context final ResourceContext context) {
+    @Override
+    public NodeCategoriesRestService getCategoriesResource(ResourceContext context) {
         return context.getResource(NodeCategoriesRestService.class);
     }
 
-    @GET
-    @Path("{nodeCriteria}/metadata")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML})
-    public OnmsMetaDataList getMetaData(@PathParam("nodeCriteria") String nodeCriteria) {
+    @Override
+    public OnmsMetaDataList getMetaData(String nodeCriteria) {
         final OnmsNode node = getDao().get(nodeCriteria);
 
         if (node == null) {
@@ -279,10 +278,8 @@ public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,
         return new OnmsMetaDataList(node.getMetaData());
     }
 
-    @GET
-    @Path("{nodeCriteria}/metadata/{context}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML})
-    public OnmsMetaDataList getMetaData(@PathParam("nodeCriteria") String nodeCriteria, @PathParam("context") String context) {
+    @Override
+    public OnmsMetaDataList getMetaData(String nodeCriteria, String context) {
         final OnmsNode node = getDao().get(nodeCriteria);
 
         if (node == null) {
@@ -294,10 +291,8 @@ public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,
                 .collect(Collectors.toList()));
     }
 
-    @GET
-    @Path("{nodeCriteria}/metadata/{context}/{key}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML})
-    public OnmsMetaDataList getMetaData(@PathParam("nodeCriteria") String nodeCriteria, @PathParam("context") String context, @PathParam("key") String key) {
+    @Override
+    public OnmsMetaDataList getMetaData(String nodeCriteria, String context, String key) {
         final OnmsNode node = getDao().get(nodeCriteria);
 
         if (node == null) {
