@@ -5,7 +5,7 @@ import GraphService from "@/services/GraphService.js";
 const fetchNodes = ({ commit }) => {
     return NodesService.getNodes()
         .then(response => {
-            commit("SET_NODES", response.data.node.filter(
+            let nodes = response.data.node.filter(
                 (node) =>
                   !(
                     node.assetRecord.latitude == null ||
@@ -15,8 +15,9 @@ const fetchNodes = ({ commit }) => {
                     node.assetRecord.longitude == null ||
                     node.assetRecord.longitude.length === 0
                   )
-              )),
-              commit("SET_INTERESTED_NODES_ID", response.data.node.map(node => node.id))
+              )
+            commit("SET_NODES", nodes),
+              commit("SET_INTERESTED_NODES_ID", nodes.map(node => node.id))
         })
         .catch(error => {
             throw (error)
