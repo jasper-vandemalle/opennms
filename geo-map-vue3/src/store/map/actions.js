@@ -7,17 +7,17 @@ const fetchNodes = ({ commit }) => {
         .then(response => {
             let nodes = response.data.node.filter(
                 (node) =>
-                  !(
-                    node.assetRecord.latitude == null ||
-                    node.assetRecord.latitude.length === 0
-                  ) &&
-                  !(
-                    node.assetRecord.longitude == null ||
-                    node.assetRecord.longitude.length === 0
-                  )
-              )
+                    !(
+                        node.assetRecord.latitude == null ||
+                        node.assetRecord.latitude.length === 0
+                    ) &&
+                    !(
+                        node.assetRecord.longitude == null ||
+                        node.assetRecord.longitude.length === 0
+                    )
+            )
             commit("SET_NODES", nodes),
-              commit("SET_INTERESTED_NODES_ID", nodes.map(node => node.id))
+                commit("SET_INTERESTED_NODES_ID", nodes.map(node => node.id))
         })
         .catch(error => {
             throw (error)
@@ -34,11 +34,11 @@ const fetchAlarms = ({ commit }) => {
         })
 }
 
-const resetInterestedNodesID = ({ commit, state }) =>{
+const resetInterestedNodesID = ({ commit, state }) => {
     commit("SET_INTERESTED_NODES_ID", state.nodesWithCoordinates.map(node => node.id))
 }
 
-const fetchNodesGraph = ({ commit }) =>{
+const fetchNodesGraph = ({ commit }) => {
     return GraphService.getNodesGraph()
         .then(response => {
             let edges = []
@@ -55,7 +55,7 @@ const fetchNodesGraph = ({ commit }) =>{
         })
 }
 
-const setInterestedNodesId = ({ commit }, ids) =>{
+const setInterestedNodesId = ({ commit }, ids) => {
     commit("SET_INTERESTED_NODES_ID", ids)
 }
 

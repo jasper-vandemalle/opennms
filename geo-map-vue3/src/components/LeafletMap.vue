@@ -65,20 +65,10 @@ export default {
       return this.$store.getters['mapModule/getInterestedNodes']
     },
 
-    edges() {
-      
+    edges() { 
       let ids = this.$store.getters['mapModule/getInterestedNodesID'];
-      console.log("ids = "+ ids)
       let interestedNodesIDCoordinateMap = this.getInterestedNodesIDCoordinateMap();
 
-      this.$store.getters['mapModule/getEdges'].forEach(e=> console.log("edge: "+ e))
-      this.$store.getters['mapModule/getEdges'].filter(edge => ids.includes(edge[0]) && ids.includes(edge[1]))
-      .map((edge) => {
-        let edgeCoordinatesPair = [];
-        edgeCoordinatesPair.push(interestedNodesIDCoordinateMap.get(edge[0]));
-        edgeCoordinatesPair.push(interestedNodesIDCoordinateMap.get(edge[1]));
-        return edgeCoordinatesPair
-      }).forEach(e=> console.log("result edge: "+ e))
       return this.$store.getters['mapModule/getEdges'].filter(edge => ids.includes(edge[0]) && ids.includes(edge[1]))
       .map((edge) => {
         let edgeCoordinatesPair = [];
