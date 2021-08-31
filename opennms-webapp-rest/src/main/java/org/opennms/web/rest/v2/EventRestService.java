@@ -34,14 +34,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.jaxrs.ext.search.SearchBean;
+import org.apache.cxf.jaxrs.ext.search.SearchContext;
 import org.opennms.core.config.api.JaxbListWrapper;
 import org.opennms.core.criteria.Alias.JoinType;
 import org.opennms.core.criteria.CriteriaBuilder;
@@ -56,8 +54,10 @@ import org.opennms.web.rest.support.Aliases;
 import org.opennms.web.rest.support.CriteriaBehavior;
 import org.opennms.web.rest.support.CriteriaBehaviors;
 import org.opennms.web.rest.support.IpLikeCriteriaBehavior;
+import org.opennms.web.rest.support.MultivaluedMapImpl;
 import org.opennms.web.rest.support.SearchProperties;
 import org.opennms.web.rest.support.SearchProperty;
+import org.opennms.web.rest.v2.api.EventRestApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,9 +68,8 @@ import org.springframework.transaction.annotation.Transactional;
  * @author <a href="agalue@opennms.org">Alejandro Galue</a>
  */
 @Component
-@Path("events")
 @Transactional
-public class EventRestService extends AbstractDaoRestServiceWithDTO<OnmsEvent,EventDTO,SearchBean,Integer,Integer> {
+public class EventRestService extends AbstractDaoRestServiceWithDTO<OnmsEvent,EventDTO,SearchBean,Integer,Integer> implements EventRestApi {
 
     @Autowired
     private EventDao m_dao;
@@ -169,6 +168,16 @@ public class EventRestService extends AbstractDaoRestServiceWithDTO<OnmsEvent,Ev
         return getDao().get(id);
     }
 
+    @Override
+    public EventDTO mapEntityToDTO(OnmsEvent entity) {
+        return m_eventMapper.eventToEventDTO(entity);
+    }
+
+    @Override
+    public OnmsEvent mapDTOToEntity(EventDTO dto) {
+        return m_eventMapper.eventDTOToEvent(dto);
+    }
+
     /**
      * NOTE: This method defines an unused parameter of 0 length in the @Path annotation
      * in order to get CXF to prioritize this method definition instead of the create method
@@ -181,10 +190,8 @@ public class EventRestService extends AbstractDaoRestServiceWithDTO<OnmsEvent,Ev
      * @param event the event to forward
      * @return a response containing "no content" (204) when the event was succesfully forwarded
      */
-    @POST
-    @Path("{tiebreaker: $}")
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response create(Event event) {
+    @Override
+    public Response create(SecurityContext securityContext, UriInfo uriInfo, Event event) {
         if (event.getTime() == null) event.setTime(new Date());
         if (event.getSource() == null) event.setSource("ReST");
 
@@ -193,13 +200,52 @@ public class EventRestService extends AbstractDaoRestServiceWithDTO<OnmsEvent,Ev
     }
 
     @Override
-    public EventDTO mapEntityToDTO(OnmsEvent entity) {
-        return m_eventMapper.eventToEventDTO(entity);
+    public Response getCount(UriInfo uriInfo, SearchContext searchContext) {
+        return super.getCount(uriInfo, searchContext);
     }
 
     @Override
-    public OnmsEvent mapDTOToEntity(EventDTO dto) {
-        return m_eventMapper.eventDTOToEvent(dto);
+    public Response getProperties(String query) {
+        return super.getProperties(query);
     }
 
+    @Override
+    public Response getPropertyValues(String propertyId, String query, Integer limit) {
+        return super.getPropertyValues(propertyId, query, limit);
+    }
+
+    @Override
+    public Response get(UriInfo uriInfo, SearchContext searchContext) {
+        return super.get(uriInfo, searchContext);
+    }
+
+    @Override
+    public Response get(UriInfo uriInfo, Integer id) {
+        return super.get(uriInfo, id);
+    }
+
+    @Override
+    public Response createSpecific(UriInfo uriInfo, Integer id) {
+        return super.createSpecific();
+    }
+
+    @Override
+    public Response updateMany(SecurityContext securityContext, UriInfo uriInfo, SearchContext searchContext, MultivaluedMapImpl params) {
+        return super.updateMany(securityContext, uriInfo, searchContext, params);
+    }
+
+    @Override
+    public Response update(SecurityContext securityContext, UriInfo uriInfo, Integer id, OnmsEvent event) {
+        return super.update(securityContext, uriInfo, id, event);
+    }
+
+    @Override
+    public Response deleteMany(SecurityContext securityContext, UriInfo uriInfo, SearchContext searchContext) {
+        return super.deleteMany(securityContext, uriInfo, searchContext);
+    }
+
+    @Override
+    public Response delete(SecurityContext securityContext, UriInfo uriInfo, Integer id) {
+        return super.delete(securityContext, uriInfo, id);
+    }
 }
