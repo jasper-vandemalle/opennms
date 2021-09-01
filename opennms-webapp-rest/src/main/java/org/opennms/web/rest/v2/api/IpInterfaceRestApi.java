@@ -54,13 +54,13 @@ public interface IpInterfaceRestApi  {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML})
-    @Operation(summary = "Get all types of interface", description = "Get all types of interface  ", tags = {"ipinterfaces"})
+    @Operation(summary = "Get all  interfaces", description = "Get all types of interfaces  ", tags = {"ipinterfaces"})
     @ApiResponses(value = {
 
-            @ApiResponse(responseCode = "200", description = "Successful operation",
-                    content = @Content)
+            @ApiResponse(responseCode = "200", description = "successful operation"),
+            @ApiResponse(responseCode = "404", description = "Node not found",content = @Content)
     })
-     Response get(@Context final UriInfo uriInfo, @Context final SearchContext searchContext) ;
+    Response get(@Context final UriInfo uriInfo, @Context final SearchContext searchContext) ;
 
     @GET
     @Path("count")
@@ -68,20 +68,19 @@ public interface IpInterfaceRestApi  {
     @Operation(summary = "Get interfaces count", description = "Get a count's all types of interfaces", tags = {"ipinterfaces"})
     @ApiResponses(value = {
 
-            @ApiResponse(responseCode = "200", description = "Successful operation",
-                    content = @Content)
+            @ApiResponse(responseCode = "200", description = "successful operation"),
+            @ApiResponse(responseCode = "404", description = "Node not found",content = @Content)
     })
-     Response getCount(@Context final UriInfo uriInfo, @Context final SearchContext searchContext) ;
+    Response getCount(@Context final UriInfo uriInfo, @Context final SearchContext searchContext) ;
     @GET
     @Path("properties")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Operation(summary = "Get the properties", description = "Get all types of properties", tags = {"ipinterfaces"})
     @ApiResponses(value = {
-
-            @ApiResponse(responseCode = "200", description = "Successful operation",
-                    content = @Content)
+            @ApiResponse(responseCode = "200", description = "successful operation"),
+            @ApiResponse(responseCode = "404", description = "Node not found",content = @Content)
     })
-     Response getProperties(@QueryParam("q") final String query) ;
+    Response getProperties(@QueryParam("q") final String query) ;
 
 
 
@@ -91,82 +90,91 @@ public interface IpInterfaceRestApi  {
     @Operation(summary = "Get a properties ", description = "Get a properties  for a specific propertyId", tags = {"ipinterfaces"})
     @ApiResponses(value = {
 
-            @ApiResponse(responseCode = "200", description = "Successful operation",
-                    content = @Content)
+            @ApiResponse(responseCode = "200", description = "Successful operation"),
+            @ApiResponse(responseCode = "204", description = "No corresponding element found",content = @Content),
+            @ApiResponse(responseCode = "404", description = "Node not found",content = @Content)
     })
-     Response getPropertyValues(@PathParam("propertyId") final String propertyId, @QueryParam("q") final String query, @QueryParam("limit") final Integer limit) ;
+    Response getPropertyValues(@PathParam("propertyId") final String propertyId, @QueryParam("q") final String query, @QueryParam("limit") final Integer limit) ;
 
     @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML})
-    @Operation(summary = "Get id of interface", description = "Get id of interface", tags = {"ipinterfaces"})
+    @Operation(summary = "Get interface by id", description = "Get interface by id", tags = {"ipinterfaces"})
     @ApiResponses(value = {
 
-            @ApiResponse(responseCode = "200", description = "Successful operation",
-                    content = @Content)
+            @ApiResponse(responseCode = "200", description = "successful operation"),
+            @ApiResponse(responseCode = "204", description = "No corresponding element found",content = @Content),
+            @ApiResponse(responseCode = "404", description = "Node not found",content = @Content)
     })
-     Response get(@Context final UriInfo uriInfo, @PathParam("id") final String id) ;
+    Response get(@Context final UriInfo uriInfo, @PathParam("id") final String id) ;
 
     @POST
     @Path("{id}")
     @Operation(summary = "Create an interface", description = "Create an interface by id", tags = {"ipinterfaces"})
     @ApiResponses(value = {
-
-            @ApiResponse(responseCode = "204", description = "Successful operation",
-                    content = @Content)
+            @ApiResponse(responseCode = "200", description = "Successful operation",
+                    content = @Content),
+            @ApiResponse(responseCode = "400", description = "Bad Request",content = @Content)
     })
-     Response createSpecific() ;
+    Response createSpecific() ;
 
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Operation(summary = "Create an interface", description = "Create an interface", tags = {"ipinterfaces"})
     @ApiResponses(value = {
 
-            @ApiResponse(responseCode = "204", description = "Successful operation",
-                    content = @Content)
+            @ApiResponse(responseCode = "200", description = "Successful operation",
+                    content = @Content),
+            @ApiResponse(responseCode = "400", description = "Bad Request",content = @Content)
     })
-     Response create(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo,OnmsIpInterface object) ;
+    Response create(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo,OnmsIpInterface object) ;
 
     @PUT
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Operation(summary = "Create many interface", description = "Create many interface", tags = {"ipinterfaces"})
+    @Operation(summary = "Update many interfaces", description = "Update many interfaces", tags = {"ipinterfaces"})
     @ApiResponses(value = {
 
-            @ApiResponse(responseCode = "204", description = "Successful operation",
-                    content = @Content)
+            @ApiResponse(responseCode = "200", description = "Successful operation",
+                    content = @Content),
+            @ApiResponse(responseCode = "204", description = "No corresponding element found",content = @Content),
+            @ApiResponse(responseCode = "400", description = "Bad Request",content = @Content)
     })
-     Response updateMany(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo, @Context final SearchContext searchContext, final MultivaluedMapImpl params) ;
+    Response updateMany(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo, @Context final SearchContext searchContext, final MultivaluedMapImpl params) ;
 
     @PUT
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{id}")
-    @Operation(summary = "Update  an interface", description = "Update an interface by id", tags = {"ipinterfaces"})
+    @Operation(summary = "Update  an  specific interface ", description = "Update an interface by id", tags = {"ipinterfaces"})
     @ApiResponses(value = {
-
-            @ApiResponse(responseCode = "204", description = "Successful operation",
-                    content = @Content)
+            @ApiResponse(responseCode = "200", description = "Successful operation",
+                    content = @Content),
+            @ApiResponse(responseCode = "204", description = "No corresponding element found",content = @Content),
+            @ApiResponse(responseCode = "400", description = "Bad Request",content = @Content)
     })
-     Response update(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo, @PathParam("id") final Integer id, final OnmsIpInterface object);
+    Response update(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo, @PathParam("id") final Integer id, final OnmsIpInterface object);
 
     @PUT
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Path("{id}")
-    @Operation(summary = "Update  an interface properties", description = "Update an interface properties by id", tags = {"ipinterfaces"})
+    @Operation(summary = "Update  an properties of interface ", description = "Update an properties of interface  by id", tags = {"ipinterfaces"})
     @ApiResponses(value = {
 
-            @ApiResponse(responseCode = "204", description = "Successful operation",
-                    content = @Content)
+            @ApiResponse(responseCode = "200", description = "Successful operation",
+                    content = @Content),
+            @ApiResponse(responseCode = "204", description = "No corresponding element found",content = @Content),
+            @ApiResponse(responseCode = "400", description = "Bad Request",content = @Content)
     })
-     Response updateProperties(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo, @PathParam("id") final String id, final MultivaluedMapImpl params) ;
+    Response updateProperties(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo, @PathParam("id") final String id, final MultivaluedMapImpl params) ;
 
     @DELETE
     @Operation(summary = " Delete Many  interface", description = "Delete Many  interface", tags = {"ipinterfaces"})
     @ApiResponses(value = {
 
             @ApiResponse(responseCode = "200", description = "Successful operation",
-                    content = @Content)
+                    content = @Content),
+            @ApiResponse(responseCode = "204", description = "No corresponding element found",content = @Content),
     })
-     Response deleteMany(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo, @Context final SearchContext searchContext) ;
+    Response deleteMany(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo, @Context final SearchContext searchContext) ;
 
     @DELETE
     @Path("{id}")
@@ -174,9 +182,10 @@ public interface IpInterfaceRestApi  {
     @ApiResponses(value = {
 
             @ApiResponse(responseCode = "200", description = "Successful operation",
-                    content = @Content)
+                    content = @Content),
+            @ApiResponse(responseCode = "204", description = "No corresponding element found",content = @Content),
     })
-     Response delete(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo, @PathParam("id") final String id) ;
+    Response delete(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo, @PathParam("id") final String id) ;
 
 
 

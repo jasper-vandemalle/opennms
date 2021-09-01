@@ -36,11 +36,16 @@ import java.util.Set;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
+
+import org.apache.cxf.jaxrs.ext.search.SearchBean;
+import org.apache.cxf.jaxrs.ext.search.SearchContext;
+import org.opennms.core.config.api.JaxbListWrapper;
 import org.apache.cxf.jaxrs.ext.search.SearchBean;
 import org.opennms.core.config.api.JaxbListWrapper;
 import org.opennms.core.criteria.Alias.JoinType;
@@ -67,9 +72,8 @@ import org.springframework.transaction.annotation.Transactional;
  * based on a given criteria.</p>
  */
 @Component
-@Path("ipinterfaces")
 @Transactional
-public class IpInterfaceRestService extends AbstractDaoRestServiceWithDTO<OnmsIpInterface, OnmsIpInterface,SearchBean,Integer,String>implements IpInterfaceRestApi {
+public class IpInterfaceRestService extends AbstractDaoRestServiceWithDTO<OnmsIpInterface,OnmsIpInterface,SearchBean,Integer,String>implements IpInterfaceRestApi {
 
     @Autowired
     private IpInterfaceDao m_dao;
@@ -146,16 +150,47 @@ public class IpInterfaceRestService extends AbstractDaoRestServiceWithDTO<OnmsIp
         throw new WebApplicationException("More than one IP address matches " + ipAddress, Status.BAD_REQUEST);
     }
 
+    @Override
+    public Response create(SecurityContext securityContext, UriInfo uriInfo, OnmsIpInterface object) {
+        return  super.create(securityContext,uriInfo, object);
+    }
+
+    @Override
+    public Response update(SecurityContext securityContext, UriInfo uriInfo, Integer id, OnmsIpInterface object) {
+        return  super.update(securityContext, uriInfo, id, object);
+    }
+
+
+    @Override
+    public Response delete(SecurityContext securityContext, UriInfo uriInfo, String id) {
+        return super.delete(securityContext, uriInfo, id);
+    }
+
+
+    @Override
+    public Response get(UriInfo uriInfo, SearchContext searchContext) {
+        return super.get(uriInfo, searchContext);
+    }
+    @Override
+    public Response getCount(UriInfo uriInfo, SearchContext searchContext) {
+        return super.getCount(uriInfo, searchContext);
+    }
+
+    @Override
+    public Response getProperties(String query) {
+        return super.getProperties(query);
+    }
+
+    @Override
+    public Response getPropertyValues(String propertyId, String query, Integer limit) {
+        return super.getPropertyValues(propertyId, query, limit);
+    }
+
     public OnmsIpInterface mapEntityToDTO(OnmsIpInterface entity) {
         return entity;
     }
-
     public OnmsIpInterface mapDTOToEntity(OnmsIpInterface dto) {
         return dto;
     }
 
-    /*@Override
-    public Response create(SecurityContext securityContext, UriInfo uriInfo, OnmsIpInterface object) {
-        return new OnmsIpInterface();
-    }*/
 }
