@@ -34,16 +34,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ResourceContext;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.jaxrs.ext.search.SearchBean;
+import org.apache.cxf.jaxrs.ext.search.SearchContext;
 import org.opennms.core.config.api.JaxbListWrapper;
 import org.opennms.core.criteria.Alias.JoinType;
 import org.opennms.core.criteria.CriteriaBuilder;
@@ -51,7 +49,6 @@ import org.opennms.core.criteria.restrictions.Restrictions;
 import org.opennms.netmgt.dao.api.MonitoringLocationDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.events.api.EventProxy;
-import org.opennms.netmgt.events.api.EventProxyException;
 import org.opennms.netmgt.model.OnmsMetaDataList;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsNodeList;
@@ -69,11 +66,10 @@ import org.opennms.web.rest.support.SearchProperty;
 import org.opennms.web.rest.v2.api.NodeRestApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.MessageFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Basic Web Service using REST for {@link OnmsNode} entity
@@ -83,7 +79,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
  */
 @Component
 @Transactional
-public class NodeRestService implements NodeRestApi {
+public class NodeRestService extends AbstractDaoRestServiceWithDTO<OnmsNode,OnmsNode,SearchBean,Integer,String> implements NodeRestApi {
 
     private static final Logger LOG = LoggerFactory.getLogger(NodeRestService.class);
 
@@ -97,19 +93,31 @@ public class NodeRestService implements NodeRestApi {
     @Qualifier("eventProxy")
     private EventProxy m_eventProxy;
 
-    private NodeDao getDao() {
+    public OnmsNode mapEntityToDTO(OnmsNode entity) {
+        return entity;
+    }
+
+    public OnmsNode mapDTOToEntity(OnmsNode dto) {
+        return dto;
+    }
+
+    @Override
+    protected NodeDao getDao() {
         return m_dao;
     }
 
-    private Class<OnmsNode> getDaoClass() {
+    @Override
+    protected Class<OnmsNode> getDaoClass() {
         return OnmsNode.class;
     }
 
-    private Class<SearchBean> getQueryBeanClass() {
+    @Override
+    protected Class<SearchBean> getQueryBeanClass() {
         return SearchBean.class;
     }
 
-    private CriteriaBuilder getCriteriaBuilder(UriInfo uriInfo) {
+    @Override
+    protected CriteriaBuilder getCriteriaBuilder(UriInfo uriInfo) {
         final CriteriaBuilder builder = new CriteriaBuilder(OnmsNode.class, Aliases.node.toString());
 
         // 1st level JOINs
@@ -136,11 +144,13 @@ public class NodeRestService implements NodeRestApi {
         return builder;
     }
 
-    private Set<SearchProperty> getQueryProperties() {
+    @Override
+    protected Set<SearchProperty> getQueryProperties() {
         return SearchProperties.NODE_SERVICE_PROPERTIES;
     }
 
-    private Map<String,CriteriaBehavior<?>> getCriteriaBehaviors() {
+    @Override
+    protected Map<String,CriteriaBehavior<?>> getCriteriaBehaviors() {
         Map<String,CriteriaBehavior<?>> map = new HashMap<>();
 
         // Root alias
@@ -194,10 +204,12 @@ public class NodeRestService implements NodeRestApi {
         return map;
     }
 
-    private JaxbListWrapper<OnmsNode> createListWrapper(Collection<OnmsNode> list) {
+    @Override
+    protected JaxbListWrapper<OnmsNode> createListWrapper(Collection<OnmsNode> list) {
         return new OnmsNodeList(list);
     }
 
+    @Override
     public Response doCreate(final SecurityContext securityContext, final UriInfo uriInfo, final OnmsNode object) {
         if (object == null) {
             throw getException(Status.BAD_REQUEST, "Node object cannot be null");
@@ -218,35 +230,66 @@ public class NodeRestService implements NodeRestApi {
         return Response.created(RedirectHelper.getRedirectUri(uriInfo, id)).build();
     }
 
-    private Response doUpdateProperties(SecurityContext securityContext, UriInfo uriInfo, OnmsNode targetObject, MultivaluedMapImpl params) {
+    @Override
+    protected Response doUpdateProperties(SecurityContext securityContext, UriInfo uriInfo, OnmsNode targetObject, MultivaluedMapImpl params) {
         RestUtils.setBeanProperties(targetObject, params);
         getDao().update(targetObject);
         return Response.noContent().build();
     }
 
-    private void doDelete(SecurityContext securityContext, UriInfo uriInfo, OnmsNode node) {
+    @Override
+    protected void doDelete(SecurityContext securityContext, UriInfo uriInfo, OnmsNode node) {
         getDao().delete(node);
         final Event e = EventUtils.createDeleteNodeEvent("ReST", node.getId(), -1L);
         sendEvent(e);
     }
 
-    private OnmsNode doGet(UriInfo uriInfo, String id) {
+    @Override
+    protected OnmsNode doGet(UriInfo uriInfo, String id) {
         return getDao().get(id);
     }
 
-    private void sendEvent(final Event event) {
-        try {
-            m_eventProxy.send(event);
-        } catch (final EventProxyException e) {
-            throw getException(Status.INTERNAL_SERVER_ERROR, "Cannot send event {} : {}", event.getUei(), e.getMessage());
-        }
+    @Override
+    public Response get(UriInfo uriInfo, String id) {
+        return super.get(uriInfo,id);
     }
 
-    private WebApplicationException getException(final Status status, String msg, String... params) throws WebApplicationException {
-        if (params != null) msg = MessageFormatter.arrayFormat(msg, params).getMessage();
-        LOG.error(msg);
-        return new WebApplicationException(Response.status(status).type(MediaType.TEXT_PLAIN).entity(msg).build());
+    @Override
+    public Response create(SecurityContext securityContext, UriInfo uriInfo, OnmsNode object) {
+        return  super.create(securityContext,uriInfo, object);
     }
+
+    @Override
+    public Response update(SecurityContext securityContext, UriInfo uriInfo, Integer id, OnmsNode object) {
+        return  super.update(securityContext, uriInfo, id, object);
+    }
+
+    @Override
+    public Response updateProperties(SecurityContext securityContext, UriInfo uriInfo, String id, MultivaluedMapImpl params) {
+        return super.updateProperties(securityContext, uriInfo,id, params);
+    }
+
+    @Override
+    public Response delete(SecurityContext securityContext, UriInfo uriInfo, String id) {
+        return super.delete(securityContext, uriInfo, id);
+    }
+
+
+    @Override
+    public Response getCount(UriInfo uriInfo, SearchContext searchContext) {
+        return super.getCount(uriInfo, searchContext);
+    }
+
+    @Override
+    public Response getProperties(String query) {
+        return super.getProperties(query);
+    }
+
+    @Override
+    public Response getPropertyValues(String propertyId, String query, Integer limit) {
+        return super.getPropertyValues(propertyId, query, limit);
+    }
+
     @Override
     public NodeIpInterfacesRestService getIpInterfaceResource(ResourceContext context) {
         return context.getResource(NodeIpInterfacesRestService.class);
