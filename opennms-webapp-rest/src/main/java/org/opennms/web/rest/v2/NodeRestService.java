@@ -122,6 +122,7 @@ public class NodeRestService extends AbstractDaoRestServiceWithDTO<OnmsNode,Onms
 
         // 1st level JOINs
         builder.alias("assetRecord", Aliases.assetRecord.toString(), JoinType.LEFT_JOIN);
+        
         // Add this alias via a CriteriaBehavior so that we can specify a join condition
         //builder.alias("categories", Aliases.category.toString(), JoinType.LEFT_JOIN);
         // Add this alias via a CriteriaBehavior so that we can specify a join condition

@@ -273,6 +273,5 @@ public interface NodeRestApi {
             @ApiResponse(responseCode = "404", description = "Node not found",content = @Content)
     })
     OnmsMetaDataList getMetaData(@PathParam("nodeCriteria") String nodeCriteria, @PathParam("context") String context, @PathParam("key") String key);
-
 }
 
