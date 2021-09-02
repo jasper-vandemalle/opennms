@@ -120,7 +120,7 @@ public interface IpInterfaceRestApi  {
 
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Operation(summary = "Create an interface", description = "Create an interface", tags = {"ipinterfaces"})
+    @Operation(summary = "Create an interfaces", description = "Create an interface", tags = {"ipinterfaces"})
     @ApiResponses(value = {
 
             @ApiResponse(responseCode = "200", description = "Successful operation",

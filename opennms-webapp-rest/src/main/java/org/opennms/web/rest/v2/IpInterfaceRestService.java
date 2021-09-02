@@ -181,6 +181,7 @@ public class IpInterfaceRestService extends AbstractDaoRestServiceWithDTO<OnmsIp
         return super.getProperties(query);
     }
 
+
     @Override
     public Response getPropertyValues(String propertyId, String query, Integer limit) {
         return super.getPropertyValues(propertyId, query, limit);
