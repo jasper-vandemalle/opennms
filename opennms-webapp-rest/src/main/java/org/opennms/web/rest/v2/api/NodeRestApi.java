@@ -204,7 +204,6 @@ public interface NodeRestApi {
     })
     Response delete(@Context final SecurityContext securityContext, @Context final UriInfo uriInfo, @PathParam("id") final String id) ;
 
-    @GET
     @Path("{nodeCriteria}/ipinterfaces")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML})
     @Operation(summary = "Get  ip Interface resource for the context", description = "Get ip Interface resource for the context",tags = {"Nodes"})
@@ -214,7 +213,6 @@ public interface NodeRestApi {
     })
     NodeIpInterfacesRestService getIpInterfaceResource(@Context final ResourceContext context) ;
 
-    @GET
     @Path("{nodeCriteria}/snmpinterfaces")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML})
     @Operation(summary = "Get a snap interface resource for the context", description = "Snap interface resource",tags = {"Nodes"})
@@ -224,7 +222,6 @@ public interface NodeRestApi {
     })
     NodeSnmpInterfacesRestService getSnmpInterfaceResource(@Context final ResourceContext context) ;
 
-    @GET
     @Path("{nodeCriteria}/hardwareInventory")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML})
     @Operation(summary = "Get a hardware inventory resource for the context", description = "hardware inventory resource",tags = {"Nodes"})
@@ -234,7 +231,6 @@ public interface NodeRestApi {
     })
     NodeHardwareInventoryRestService getHardwareInventoryResource(@Context final ResourceContext context) ;
 
-    @GET
     @Path("{nodeCriteria}/categories")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML})
     @Operation(summary = "Get Categories for the context", description = "categories",tags = {"Nodes"})
