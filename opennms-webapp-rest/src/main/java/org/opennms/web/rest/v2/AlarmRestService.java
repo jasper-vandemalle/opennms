@@ -35,14 +35,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
@@ -51,6 +43,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.cxf.jaxrs.ext.search.SearchBean;
+import org.apache.cxf.jaxrs.ext.search.SearchContext;
 import org.opennms.core.config.api.JaxbListWrapper;
 import org.opennms.core.criteria.Alias.JoinType;
 import org.opennms.core.criteria.CriteriaBuilder;
@@ -76,6 +69,7 @@ import org.opennms.web.rest.support.MultivaluedMapImpl;
 import org.opennms.web.rest.support.SearchProperties;
 import org.opennms.web.rest.support.SearchProperty;
 import org.opennms.web.rest.support.SecurityHelper;
+import org.opennms.web.rest.v2.api.AlarmRestApi;
 import org.opennms.web.svclayer.TroubleTicketProxy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -87,9 +81,8 @@ import org.springframework.transaction.annotation.Transactional;
  * @author <a href="agalue@opennms.org">Alejandro Galue</a>
  */
 @Component
-@Path("alarms")
 @Transactional
-public class AlarmRestService extends AbstractDaoRestServiceWithDTO<OnmsAlarm,AlarmDTO,SearchBean,Integer,Integer> {
+public class AlarmRestService extends AbstractDaoRestServiceWithDTO<OnmsAlarm,AlarmDTO,SearchBean,Integer,Integer> implements AlarmRestApi {
 
     @Autowired
     private AlarmDao m_dao;
@@ -249,83 +242,6 @@ public class AlarmRestService extends AbstractDaoRestServiceWithDTO<OnmsAlarm,Al
         return Response.noContent().build();
     }
 
-    @PUT
-    @Path("{id}/memo")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response updateMemo(@Context final SecurityContext securityContext, @PathParam("id") final Integer alarmId, final MultivaluedMapImpl params) {
-        final String user = params.containsKey("user") ? params.getFirst("user") : securityContext.getUserPrincipal().getName();
-        SecurityHelper.assertUserEditCredentials(securityContext, user);
-        final String body = params.getFirst("body");
-        if (body == null) throw getException(Status.BAD_REQUEST, "Body cannot be null.");
-        m_repository.updateStickyMemo(alarmId, body, user);
-        return Response.noContent().build();
-    }
-
-    @PUT
-    @Path("{id}/journal")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response updateJournal(@Context final SecurityContext securityContext, @PathParam("id") final Integer alarmId, final MultivaluedMapImpl params) {
-        final String user = params.containsKey("user") ? params.getFirst("user") : securityContext.getUserPrincipal().getName();
-        SecurityHelper.assertUserEditCredentials(securityContext, user);
-        final String body = params.getFirst("body");
-        if (body == null) throw getException(Status.BAD_REQUEST, "Body cannot be null.");
-        m_repository.updateReductionKeyMemo(alarmId, body, user);
-        return Response.noContent().build();
-    }
-
-    @DELETE
-    @Path("{id}/memo")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response removeMemo(@Context final SecurityContext securityContext, @PathParam("id") final Integer alarmId) {
-        SecurityHelper.assertUserEditCredentials(securityContext, securityContext.getUserPrincipal().getName());
-        m_repository.removeStickyMemo(alarmId);
-        return Response.noContent().build();
-    }
-
-    @DELETE
-    @Path("{id}/journal")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response removeJournal(@Context final SecurityContext securityContext, @PathParam("id") final Integer alarmId) {
-        SecurityHelper.assertUserEditCredentials(securityContext, securityContext.getUserPrincipal().getName());
-        m_repository.removeReductionKeyMemo(alarmId);
-        return Response.noContent().build();
-    }
-
-    @POST
-    @Path("{id}/ticket/create")
-    public Response createTicket(@Context final SecurityContext securityContext, @PathParam("id") final Integer alarmId) throws Exception {
-        SecurityHelper.assertUserEditCredentials(securityContext, securityContext.getUserPrincipal().getName());
-
-        return runIfTicketerPluginIsEnabled(() -> {
-            final Map<String, String> parameters = new HashMap<>();
-            parameters.put(EventConstants.PARM_USER, securityContext.getUserPrincipal().getName());
-            m_troubleTicketProxy.createTicket(alarmId, parameters);
-            return Response.status(Status.ACCEPTED).build();
-        });
-    }
-
-    @POST
-    @Path("{id}/ticket/update")
-    public Response updateTicket(@Context final SecurityContext securityContext, @PathParam("id") final Integer alarmId) throws Exception {
-        SecurityHelper.assertUserEditCredentials(securityContext, securityContext.getUserPrincipal().getName());
-
-        return runIfTicketerPluginIsEnabled(() -> {
-            m_troubleTicketProxy.updateTicket(alarmId);
-            return Response.status(Status.ACCEPTED).build();
-        });
-    }
-
-    @POST
-    @Path("{id}/ticket/close")
-    public Response closeTicket(@Context final SecurityContext securityContext, @PathParam("id") final Integer alarmId) throws Exception {
-        SecurityHelper.assertUserEditCredentials(securityContext, securityContext.getUserPrincipal().getName());
-
-        return runIfTicketerPluginIsEnabled(() -> {
-            m_troubleTicketProxy.closeTicket(alarmId);
-            return Response.status(Status.ACCEPTED).build();
-        });
-    }
-
     private Response runIfTicketerPluginIsEnabled(Callable<Response> callable) throws Exception {
         if (!isTicketerPluginEnabled()) {
             return Response.status(Status.NOT_IMPLEMENTED).entity("AlarmTroubleTicketer is not enabled. Cannot perform operation").build();
@@ -347,5 +263,117 @@ public class AlarmRestService extends AbstractDaoRestServiceWithDTO<OnmsAlarm,Al
     @Override
     public OnmsAlarm mapDTOToEntity(AlarmDTO dto) {
         return m_alarmMapper.alarmDTOToAlarm(dto);
+    }
+
+    @Override
+    public Response updateMemo(SecurityContext securityContext, Integer alarmId, MultivaluedMapImpl params) {
+        final String user = params.containsKey("user") ? params.getFirst("user") : securityContext.getUserPrincipal().getName();
+        SecurityHelper.assertUserEditCredentials(securityContext, user);
+        final String body = params.getFirst("body");
+        if (body == null) throw getException(Response.Status.BAD_REQUEST, "Body cannot be null.");
+        m_repository.updateStickyMemo(alarmId, body, user);
+        return Response.noContent().build();
+    }
+
+    @Override
+    public Response updateJournal(SecurityContext securityContext, Integer alarmId, MultivaluedMapImpl params) {
+        final String user = params.containsKey("user") ? params.getFirst("user") : securityContext.getUserPrincipal().getName();
+        SecurityHelper.assertUserEditCredentials(securityContext, user);
+        final String body = params.getFirst("body");
+        if (body == null) throw getException(Response.Status.BAD_REQUEST, "Body cannot be null.");
+        m_repository.updateReductionKeyMemo(alarmId, body, user);
+        return Response.noContent().build();
+    }
+
+    @Override
+    public Response removeMemo(SecurityContext securityContext, Integer alarmId) {
+        SecurityHelper.assertUserEditCredentials(securityContext, securityContext.getUserPrincipal().getName());
+        m_repository.removeStickyMemo(alarmId);
+        return Response.noContent().build();
+    }
+
+    @Override
+    public Response removeJournal(SecurityContext securityContext, Integer alarmId) {
+        SecurityHelper.assertUserEditCredentials(securityContext, securityContext.getUserPrincipal().getName());
+        m_repository.removeReductionKeyMemo(alarmId);
+        return Response.noContent().build();
+    }
+
+    @Override
+    public Response createTicket(SecurityContext securityContext, Integer alarmId) throws Exception {
+        SecurityHelper.assertUserEditCredentials(securityContext, securityContext.getUserPrincipal().getName());
+
+        return runIfTicketerPluginIsEnabled(() -> {
+            final Map<String, String> parameters = new HashMap<>();
+            parameters.put(EventConstants.PARM_USER, securityContext.getUserPrincipal().getName());
+            m_troubleTicketProxy.createTicket(alarmId, parameters);
+            return Response.status(Status.ACCEPTED).build();
+        });
+    }
+
+    @Override
+    public Response updateTicket(SecurityContext securityContext, Integer alarmId) throws Exception {
+        SecurityHelper.assertUserEditCredentials(securityContext, securityContext.getUserPrincipal().getName());
+
+        return runIfTicketerPluginIsEnabled(() -> {
+            m_troubleTicketProxy.updateTicket(alarmId);
+            return Response.status(Status.ACCEPTED).build();
+        });
+    }
+
+    @Override
+    public Response closeTicket(SecurityContext securityContext, Integer alarmId) throws Exception {
+        SecurityHelper.assertUserEditCredentials(securityContext, securityContext.getUserPrincipal().getName());
+
+        return runIfTicketerPluginIsEnabled(() -> {
+            m_troubleTicketProxy.closeTicket(alarmId);
+            return Response.status(Status.ACCEPTED).build();
+        });
+    }
+
+    @Override
+    public Response get(UriInfo uriInfo, String id) {
+        return super.get (uriInfo, Integer.parseInt(id));
+    }
+
+    @Override
+    public Response create(SecurityContext securityContext, UriInfo uriInfo, AlarmDTO object) {
+        return  super.create(securityContext,uriInfo, object);
+    }
+
+    @Override
+    public Response update(SecurityContext securityContext, UriInfo uriInfo, Integer id, OnmsAlarm object) {
+        return  super.update(securityContext, uriInfo, id, object);
+    }
+
+    @Override
+    public Response updateProperties(SecurityContext securityContext, UriInfo uriInfo, String id, MultivaluedMapImpl params) {
+        return super.updateProperties(securityContext, uriInfo, Integer.parseInt(id), params);
+    }
+
+    @Override
+    public Response delete(SecurityContext securityContext, UriInfo uriInfo, String id) {
+        return super.delete(securityContext, uriInfo, Integer.parseInt(id));
+    }
+
+
+    @Override
+    public Response getCount(UriInfo uriInfo, SearchContext searchContext) {
+        return super.getCount(uriInfo, searchContext);
+    }
+
+    @Override
+    public Response getProperties(String query) {
+        return super.getProperties(query);
+    }
+
+    @Override
+    public Response getPropertyValues(String propertyId, String query, Integer limit) {
+        return super.getPropertyValues(propertyId, query, limit);
+    }
+
+    @Override
+    public Response get(UriInfo uriInfo, Integer id) {
+        return super.get(uriInfo, id);
     }
 }
