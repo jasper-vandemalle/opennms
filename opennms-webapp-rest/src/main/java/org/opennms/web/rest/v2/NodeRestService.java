@@ -34,19 +34,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.container.ResourceContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.jaxrs.ext.search.SearchBean;
+import org.apache.cxf.jaxrs.ext.search.SearchContext;
 import org.opennms.core.config.api.JaxbListWrapper;
 import org.opennms.core.criteria.Alias.JoinType;
 import org.opennms.core.criteria.CriteriaBuilder;
@@ -68,6 +63,7 @@ import org.opennms.web.rest.support.MultivaluedMapImpl;
 import org.opennms.web.rest.support.RedirectHelper;
 import org.opennms.web.rest.support.SearchProperties;
 import org.opennms.web.rest.support.SearchProperty;
+import org.opennms.web.rest.v2.api.NodeRestApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,9 +78,8 @@ import org.springframework.transaction.annotation.Transactional;
  * @author <a href="agalue@opennms.org">Alejandro Galue</a>
  */
 @Component
-@Path("nodes")
 @Transactional
-public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,Integer,String> {
+public class NodeRestService extends AbstractDaoRestServiceWithDTO<OnmsNode,OnmsNode,SearchBean,Integer,String> implements NodeRestApi {
 
     private static final Logger LOG = LoggerFactory.getLogger(NodeRestService.class);
 
@@ -97,6 +92,14 @@ public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,
     @Autowired
     @Qualifier("eventProxy")
     private EventProxy m_eventProxy;
+
+    public OnmsNode mapEntityToDTO(OnmsNode entity) {
+        return entity;
+    }
+
+    public OnmsNode mapDTOToEntity(OnmsNode dto) {
+        return dto;
+    }
 
     @Override
     protected NodeDao getDao() {
@@ -119,6 +122,7 @@ public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,
 
         // 1st level JOINs
         builder.alias("assetRecord", Aliases.assetRecord.toString(), JoinType.LEFT_JOIN);
+        
         // Add this alias via a CriteriaBehavior so that we can specify a join condition
         //builder.alias("categories", Aliases.category.toString(), JoinType.LEFT_JOIN);
         // Add this alias via a CriteriaBehavior so that we can specify a join condition
@@ -246,30 +250,69 @@ public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,
         return getDao().get(id);
     }
 
-    @Path("{nodeCriteria}/ipinterfaces")
-    public NodeIpInterfacesRestService getIpInterfaceResource(@Context final ResourceContext context) {
+    @Override
+    public Response get(UriInfo uriInfo, String id) {
+        return super.get(uriInfo,id);
+    }
+
+    @Override
+    public Response create(SecurityContext securityContext, UriInfo uriInfo, OnmsNode object) {
+        return  super.create(securityContext,uriInfo, object);
+    }
+
+    @Override
+    public Response update(SecurityContext securityContext, UriInfo uriInfo, Integer id, OnmsNode object) {
+        return  super.update(securityContext, uriInfo, id, object);
+    }
+
+    @Override
+    public Response updateProperties(SecurityContext securityContext, UriInfo uriInfo, String id, MultivaluedMapImpl params) {
+        return super.updateProperties(securityContext, uriInfo,id, params);
+    }
+
+    @Override
+    public Response delete(SecurityContext securityContext, UriInfo uriInfo, String id) {
+        return super.delete(securityContext, uriInfo, id);
+    }
+
+
+    @Override
+    public Response getCount(UriInfo uriInfo, SearchContext searchContext) {
+        return super.getCount(uriInfo, searchContext);
+    }
+
+    @Override
+    public Response getProperties(String query) {
+        return super.getProperties(query);
+    }
+
+    @Override
+    public Response getPropertyValues(String propertyId, String query, Integer limit) {
+        return super.getPropertyValues(propertyId, query, limit);
+    }
+
+    @Override
+    public NodeIpInterfacesRestService getIpInterfaceResource(ResourceContext context) {
         return context.getResource(NodeIpInterfacesRestService.class);
     }
 
-    @Path("{nodeCriteria}/snmpinterfaces")
-    public NodeSnmpInterfacesRestService getSnmpInterfaceResource(@Context final ResourceContext context) {
+    @Override
+    public NodeSnmpInterfacesRestService getSnmpInterfaceResource(ResourceContext context) {
         return context.getResource(NodeSnmpInterfacesRestService.class);
     }
 
-    @Path("{nodeCriteria}/hardwareInventory")
-    public NodeHardwareInventoryRestService getHardwareInventoryResource(@Context final ResourceContext context) {
+    @Override
+    public NodeHardwareInventoryRestService getHardwareInventoryResource(ResourceContext context) {
         return context.getResource(NodeHardwareInventoryRestService.class);
     }
 
-    @Path("{nodeCriteria}/categories")
-    public NodeCategoriesRestService getCategoriesResource(@Context final ResourceContext context) {
+    @Override
+    public NodeCategoriesRestService getCategoriesResource(ResourceContext context) {
         return context.getResource(NodeCategoriesRestService.class);
     }
 
-    @GET
-    @Path("{nodeCriteria}/metadata")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML})
-    public OnmsMetaDataList getMetaData(@PathParam("nodeCriteria") String nodeCriteria) {
+    @Override
+    public OnmsMetaDataList getMetaData(String nodeCriteria) {
         final OnmsNode node = getDao().get(nodeCriteria);
 
         if (node == null) {
@@ -279,10 +322,8 @@ public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,
         return new OnmsMetaDataList(node.getMetaData());
     }
 
-    @GET
-    @Path("{nodeCriteria}/metadata/{context}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML})
-    public OnmsMetaDataList getMetaData(@PathParam("nodeCriteria") String nodeCriteria, @PathParam("context") String context) {
+    @Override
+    public OnmsMetaDataList getMetaData(String nodeCriteria, String context) {
         final OnmsNode node = getDao().get(nodeCriteria);
 
         if (node == null) {
@@ -294,10 +335,8 @@ public class NodeRestService extends AbstractDaoRestService<OnmsNode,SearchBean,
                 .collect(Collectors.toList()));
     }
 
-    @GET
-    @Path("{nodeCriteria}/metadata/{context}/{key}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_ATOM_XML})
-    public OnmsMetaDataList getMetaData(@PathParam("nodeCriteria") String nodeCriteria, @PathParam("context") String context, @PathParam("key") String key) {
+    @Override
+    public OnmsMetaDataList getMetaData(String nodeCriteria, String context, String key) {
         final OnmsNode node = getDao().get(nodeCriteria);
 
         if (node == null) {
