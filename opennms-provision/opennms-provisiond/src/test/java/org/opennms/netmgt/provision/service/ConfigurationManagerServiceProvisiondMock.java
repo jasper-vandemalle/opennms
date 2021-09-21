@@ -28,36 +28,28 @@
 
 package org.opennms.netmgt.provision.service;
 
+import java.io.IOException;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.xml.bind.JAXBException;
+
 import org.json.JSONObject;
-import org.opennms.features.config.dao.api.ConfigConverter;
+import org.opennms.core.xml.JaxbUtils;
 import org.opennms.features.config.dao.api.ConfigData;
 import org.opennms.features.config.dao.api.ConfigSchema;
 import org.opennms.features.config.service.api.ConfigurationManagerService;
 import org.opennms.netmgt.config.provisiond.ProvisiondConfiguration;
 import org.opennms.netmgt.config.provisiond.RequisitionDef;
-import org.quartz.CronExpression;
-
-import javax.xml.bind.JAXBException;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Optional;
-import java.util.Set;
 
 public class ConfigurationManagerServiceProvisiondMock implements ConfigurationManagerService {
+    /** Registers a new schema. The schema name must not have been used before. */
     @Override
-    public <ENTITY> void registerSchema(String configName, int majorVersion, int minorVersion, int patchVersion, Class<ENTITY> entityClass) throws IOException, JAXBException {
+    public void registerSchema(String configName, String xsdName, String topLevelElement) throws IOException, JAXBException{}
 
-    }
-
+    /** Upgrades an existing schema to a new version. Existing data is validated against the new schema version. */
     @Override
-    public <ENTITY> void registerSchema(String configName, Version version, Class<ENTITY> entityClass) throws IOException, JAXBException {
-
-    }
-
-    @Override
-    public void registerSchema(String configName, int majorVersion, int minorVersion, int patchVersion, ConfigConverter converter) throws IOException {
-
-    }
+    public void upgradeSchema(String configName, String xsdName, String topLevelElement) throws IOException, JAXBException{}
 
     @Override
     public Optional<ConfigSchema<?>> getRegisteredSchema(String configName) throws IOException {
@@ -65,7 +57,7 @@ public class ConfigurationManagerServiceProvisiondMock implements ConfigurationM
     }
 
     @Override
-    public void registerConfiguration(String configName, String configId, Object configObject) throws IOException {
+    public void registerConfiguration(String configName, String configId, JSONObject configObject) throws IOException {
 
     }
 
@@ -75,19 +67,19 @@ public class ConfigurationManagerServiceProvisiondMock implements ConfigurationM
     }
 
     @Override
-    public void updateConfiguration(String configName, String configId, Object configObject) throws IOException {
+    public void updateConfiguration(String configName, String configId, JSONObject configObject) throws IOException {
 
     }
 
     @Override
-    public <ENTITY> Optional<ENTITY> getConfiguration(String configName, String configId, Class<ENTITY> entityClass) throws IOException {
-        if (entityClass.equals(ProvisiondConfiguration.class)) {
+    public Optional<String> getXmlConfiguration(String configName, String configId) throws IOException {
+        if ("provisiond".equals(configName)) {
             Optional<ProvisiondConfiguration> entity = Optional.of(new ProvisiondConfiguration());
             RequisitionDef requisitionDef =  new RequisitionDef();
             requisitionDef.setImportName("test");
             requisitionDef.setCronSchedule("1 * * * * *");
             entity.get().addRequisitionDef(requisitionDef);
-            return (Optional<ENTITY>) entity;
+            return Optional.of(JaxbUtils.marshal(entity));
         } else {
             return Optional.empty();
         }
@@ -101,11 +93,6 @@ public class ConfigurationManagerServiceProvisiondMock implements ConfigurationM
     @Override
     public String getJSONStrConfiguration(String configName, String configId) throws IOException {
         return null;
-    }
-
-    @Override
-    public Optional<String> getXmlConfiguration(String configName, String configId) throws IOException {
-        return Optional.empty();
     }
 
     @Override
