@@ -74,11 +74,12 @@ public class ConfigurationManagerServiceProvisiondMock implements ConfigurationM
     @Override
     public Optional<String> getXmlConfiguration(String configName, String configId) throws IOException {
         if ("provisiond".equals(configName)) {
-            Optional<ProvisiondConfiguration> entity = Optional.of(new ProvisiondConfiguration());
+            ProvisiondConfiguration entity = new ProvisiondConfiguration();
             RequisitionDef requisitionDef =  new RequisitionDef();
+            requisitionDef.setImportUrlResource("http://localhost");
             requisitionDef.setImportName("test");
             requisitionDef.setCronSchedule("1 * * * * *");
-            entity.get().addRequisitionDef(requisitionDef);
+            entity.addRequisitionDef(requisitionDef);
             return Optional.of(JaxbUtils.marshal(entity));
         } else {
             return Optional.empty();
