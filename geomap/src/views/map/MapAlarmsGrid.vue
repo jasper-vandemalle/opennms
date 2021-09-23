@@ -2,16 +2,13 @@
   <div class="map-alarms">
     <div class="button-group">
       <span class="map-alarm-buttons">
-        <select name="subject" id="subject">
-          <option value="Acknowledge" selected="selected">Acknowledge</option>
-          <option value="Unacknowledge">Unacknowledge</option>
-          <option value="Escalate">Escalate</option>
-          <option value="Clear">Clear</option>
+        <select name="alarmOptions" id="alarmOptions" v-model="currentAlarmOption">
+          <option v-for="option in alarmOptions" :value="option" :key="option">{{ option }}</option>
         </select>
-        <button v-on:click="submit()">Submit</button>
-        <button v-on:click="clearFilters()">Clear Filters</button>
-        <button v-on:click="confirmFilters()">Apply filter</button>
-        <button v-on:click="reset()">Reset</button>
+        <button @click="submit()">Submit</button>
+        <button @click="clearFilters()">Clear Filters</button>
+        <button @click="applyFilters()">Apply filter</button>
+        <button @click="reset()">Reset</button>
       </span>
     </div>
     <div class="map-alarms-grid">
@@ -51,14 +48,30 @@ let rowData = ref(getAlarmsFromSelectedNodes());
 
 let gridApi = ref({});
 
+let gridColumnApi = ref({});
+
 function onGridReady(params: any) {
   gridApi = params.api
+  gridColumnApi = params.columnApi;
+  sizeToFit()
+  // autoSizeAll(false);
+}
+
+function sizeToFit() {
+  gridApi.sizeColumnsToFit();
+}
+
+function autoSizeAll(skipHeader) {
+  let allColumnIds = [];
+  gridColumnApi.getAllColumns().forEach(function (column) {
+    allColumnIds.push(column.colId);
+  });
+  gridColumnApi.autoSizeColumns(allColumnIds, skipHeader);
 }
 
 watch(
   () => interestedNodesID.value,
-  (newValue, oldValue) => {
-    console.log("I'm changed from " + oldValue + " to " + newValue)
+  () => {
     gridApi.setRowData(
       getAlarmsFromSelectedNodes()
     );
@@ -78,11 +91,22 @@ function getAlarmsFromSelectedNodes() {
   }));
 }
 
+let alarmOptions = ref(["Acknowledge", "Unacknowledge", "Escalate", "Clear"]);
+
+let currentAlarmOption = ref(alarmOptions.value[0]);
+
+function submit() {
+  let selectedRows = gridApi.getSelectedNodes().map(node => node.data);
+  let selectedAlarmIds: string[] = selectedRows.map(alarm => alarm.id);
+  console.log("submitting: " + currentAlarmOption.value)
+  console.log("selectedAlarmIds :  " + selectedAlarmIds)
+}
+
 function clearFilters() {
   gridApi.setFilterModel(null);
 }
 
-function confirmFilters() {
+function applyFilters() {
   let nodesLable: any = [];
   gridApi.forEachNodeAfterFilter((node: any) => {
     nodesLable.push(node.data.node);
@@ -98,6 +122,7 @@ function confirmFilters() {
 function reset() {
   store.dispatch("mapModule/resetInterestedNodesID");
 }
+
 
 const defaultColDef = ref({
   floatingFilter: true,
@@ -149,17 +174,12 @@ const columnDefs = ref([
     }
   },
   {
-    headerName: "Node",
+    headerName: "NODE",
     field: "node",
     headerTooltip: "Node",
   },
   {
     headerName: "UEI",
-    field: "lable",
-    headerTooltip: "Lable",
-  },
-  {
-    headerName: "LABLE SOURCE",
     field: "uei",
     headerTooltip: "UEI",
   },
