@@ -15,7 +15,7 @@
       <ag-grid-vue
         style="width: 100%; height: 700px"
         class="ag-theme-alpine"
-        rowSelection="multiple"
+        rowSelection="single"
         @grid-ready="onGridReady"
         :columnDefs="columnDefs"
         :rowData="rowData"
@@ -100,6 +100,12 @@ function submit() {
   let selectedAlarmIds: string[] = selectedRows.map(alarm => alarm.id);
   console.log("submitting: " + currentAlarmOption.value)
   console.log("selectedAlarmIds :  " + selectedAlarmIds)
+
+  store.dispatch("mapModule/modifyAlarm", {
+    pathVariable: selectedAlarmIds, queryParameters: {
+      ack: false,
+    }
+  });
 }
 
 function clearFilters() {

@@ -1,6 +1,7 @@
-import { v2 } from './axiosInstances'
+import { v2, rest } from './axiosInstances'
 import {
     QueryParameters,
+    AlarmQueryParameters,
     AlarmApiResponse
 } from '@/types'
 import { queryParametersHandler } from './serviceHelpers'
@@ -29,6 +30,20 @@ const getAlarms = async (queryParameters?: QueryParameters): Promise<AlarmApiRes
     }
 }
 
+const modifyAlarm = async (alarmId: string, alarmQueryParameters: AlarmQueryParameters) => {
+    console.log("midifying alarm id - " + alarmId + " . QueryParameters: " + JSON.stringify(alarmQueryParameters))
+    let endpointWithQueryString = ""
+
+    if (alarmQueryParameters) {
+        endpointWithQueryString = queryParametersHandler(alarmQueryParameters, endpoint + "/" + alarmId)
+    }
+    console.log("endpointWithQueryString =" + endpointWithQueryString);
+    const resp = await v2.put(endpointWithQueryString, "", )
+    console.log("response = " + JSON.stringify(resp))
+    // return false;
+}
+
 export {
     getAlarms,
+    modifyAlarm
 }
