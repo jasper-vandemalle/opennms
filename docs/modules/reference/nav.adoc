@@ -27,4 +27,8 @@
 *** xref:configuration/telemetryd/protocols/netflow9.adoc[]
 *** xref:configuration/telemetryd/protocols/openconfig.adoc[]
 *** xref:configuration/telemetryd/protocols/sflow.adoc[]
+** xref:configuration/ticketing/introduction.adoc[]
+*** xref:configuration/ticketing/ticketer/jira.adoc[]
+*** xref:configuration/ticketing/ticketer/remedy.adoc[]
+*** xref:configuration/ticketing/ticketer/tsrm.adoc[]
 * xref:glossary.adoc[]
