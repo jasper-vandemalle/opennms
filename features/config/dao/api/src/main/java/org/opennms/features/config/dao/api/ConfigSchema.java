@@ -68,4 +68,5 @@ public class ConfigSchema<T extends ConfigConverter> implements Serializable {
         this.converterClass = (Class<T>) converter.getClass();
         this.converter = converter;
     }
+
 }
