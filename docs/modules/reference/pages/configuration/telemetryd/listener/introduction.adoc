@@ -1,5 +1,0 @@
-
-[[ref-listener]]
-= Listener Reference
-
-This section describes the available Telemetryd listeners.
