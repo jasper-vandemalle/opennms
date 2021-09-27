@@ -30,7 +30,7 @@ const getAlarms = async (queryParameters?: QueryParameters): Promise<AlarmApiRes
     }
 }
 
-const modifyAlarm = async (alarmId: string, alarmQueryParameters: AlarmQueryParameters) => {
+const modifyAlarm = async (alarmId: string, alarmQueryParameters: AlarmQueryParameters): Promise<T> => {
     console.log("midifying alarm id - " + alarmId + " . QueryParameters: " + JSON.stringify(alarmQueryParameters))
     let endpointWithQueryString = ""
 
@@ -42,6 +42,7 @@ const modifyAlarm = async (alarmId: string, alarmQueryParameters: AlarmQueryPara
         console.log("endpointWithQueryString =" + endpointWithQueryString);
         const resp = await rest.put(endpointWithQueryString, "",)
         console.log("response = " + JSON.stringify(resp))
+        return resp.data
     } catch (err) {
         return false
     }

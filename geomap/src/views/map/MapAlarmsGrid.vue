@@ -54,19 +54,10 @@ function onGridReady(params: any) {
   gridApi = params.api
   gridColumnApi = params.columnApi;
   sizeToFit()
-  // autoSizeAll(false);
 }
 
 function sizeToFit() {
   gridApi.sizeColumnsToFit();
-}
-
-function autoSizeAll(skipHeader) {
-  let allColumnIds = [];
-  gridColumnApi.getAllColumns().forEach(function (column) {
-    allColumnIds.push(column.colId);
-  });
-  gridColumnApi.autoSizeColumns(allColumnIds, skipHeader);
 }
 
 watch(
