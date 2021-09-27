@@ -37,10 +37,14 @@ const modifyAlarm = async (alarmId: string, alarmQueryParameters: AlarmQueryPara
     if (alarmQueryParameters) {
         endpointWithQueryString = queryParametersHandler(alarmQueryParameters, endpoint + "/" + alarmId)
     }
-    console.log("endpointWithQueryString =" + endpointWithQueryString);
-    const resp = await v2.put(endpointWithQueryString, "", )
-    console.log("response = " + JSON.stringify(resp))
-    // return false;
+
+    try {
+        console.log("endpointWithQueryString =" + endpointWithQueryString);
+        const resp = await rest.put(endpointWithQueryString, "",)
+        console.log("response = " + JSON.stringify(resp))
+    } catch (err) {
+        return false
+    }
 }
 
 export {

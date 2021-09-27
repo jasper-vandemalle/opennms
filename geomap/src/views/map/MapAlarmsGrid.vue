@@ -15,7 +15,7 @@
       <ag-grid-vue
         style="width: 100%; height: 700px"
         class="ag-theme-alpine"
-        rowSelection="single"
+        rowSelection="multiple"
         @grid-ready="onGridReady"
         :columnDefs="columnDefs"
         :rowData="rowData"
@@ -33,7 +33,7 @@ import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
 import { useStore } from "vuex";
 import { computed, watch } from 'vue'
-import { Alarm, Node } from "@/types";
+import { Alarm, Node, AlarmQueryParameters } from "@/types";
 import SeverityFloatingFilter from "../../components/SeverityFloatingFilter.vue"
 
 const store = useStore();
@@ -100,12 +100,32 @@ function submit() {
   let selectedAlarmIds: string[] = selectedRows.map(alarm => alarm.id);
   console.log("submitting: " + currentAlarmOption.value)
   console.log("selectedAlarmIds :  " + selectedAlarmIds)
-
-  store.dispatch("mapModule/modifyAlarm", {
-    pathVariable: selectedAlarmIds, queryParameters: {
-      ack: false,
+  let alarmQueryParameters: AlarmQueryParameters;
+  switch (currentAlarmOption.value) {
+    case alarmOptions.value[0]: { // "Acknowledge"
+      alarmQueryParameters = { ack: true };
+      break;
     }
-  });
+    case alarmOptions.value[1]: { // "Unacknowledge"
+      alarmQueryParameters = { ack: false };
+      break;
+    }
+    case alarmOptions.value[2]: { // "Escalate"
+      alarmQueryParameters = { escalate: true };
+      break;
+    }
+    case alarmOptions.value[3]: { // "Clear"
+      alarmQueryParameters = { clear: true };
+      break;
+    }
+    default:
+      console.log("No such alarm option exists: " + currentAlarmOption.value);
+      break;
+  }
+
+  selectedAlarmIds.forEach((alarmId: string) => store.dispatch("mapModule/modifyAlarm", {
+    pathVariable: alarmId, queryParameters: alarmQueryParameters
+  }))
 }
 
 function clearFilters() {
