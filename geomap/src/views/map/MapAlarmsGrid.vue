@@ -3,7 +3,7 @@
   <div class="map-alarms">
     <div class="button-group">
       <span class="map-alarm-buttons">
-        <select name="alarmOptions" id="alarmOptions" v-model="currentAlarmOption">
+        <select name="alarmOptions" id="alarmOptions" v-model="currentAlarmOption" :disabled="!hasAlarmSelected">
           <option v-for="option in alarmOptions" :value="option" :key="option">{{ option }}</option>
         </select>
         <button type="button" :disabled="!hasAlarmSelected" @click="submit()">Submit</button>
@@ -131,9 +131,8 @@ function submit() {
   selectedAlarmIds.forEach((alarmId: string) => store.dispatch("mapModule/modifyAlarm", {
     pathVariable: alarmId, queryParameters: alarmQueryParameters
   }))
+
   GStore.flashMessage = currentAlarmOption.value + ' success.'
-
-
   setTimeout(() => {
     GStore.flashMessage = ''
   }, 3000)
