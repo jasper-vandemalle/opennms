@@ -1,11 +1,12 @@
 <template>
+  <div id="flashMessage" v-if="GStore.flashMessage" style>{{ GStore.flashMessage }}</div>
   <div class="map-alarms">
     <div class="button-group">
       <span class="map-alarm-buttons">
         <select name="alarmOptions" id="alarmOptions" v-model="currentAlarmOption">
           <option v-for="option in alarmOptions" :value="option" :key="option">{{ option }}</option>
         </select>
-        <button @click="submit()">Submit</button>
+        <button type="button" :disabled="!hasAlarmSelected" @click="submit()">Submit</button>
         <button @click="clearFilters()">Clear Filters</button>
         <button @click="applyFilters()">Apply filter</button>
         <button @click="reset()">Reset</button>
@@ -22,12 +23,13 @@
         :defaultColDef="defaultColDef"
         :gridOptions="gridOptions"
         :pagination="true"
+        @selection-changed="onSelectionChanged"
       ></ag-grid-vue>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, inject } from "vue";
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
@@ -86,9 +88,21 @@ let alarmOptions = ref(["Acknowledge", "Unacknowledge", "Escalate", "Clear"]);
 
 let currentAlarmOption = ref(alarmOptions.value[0]);
 
-function submit() {
+const GStore = inject('GStore');
+
+let selectedAlarmIds = ref([]);
+
+let hasAlarmSelected = ref(false);
+
+function onSelectionChanged() {
   let selectedRows = gridApi.getSelectedNodes().map(node => node.data);
-  let selectedAlarmIds: string[] = selectedRows.map(alarm => alarm.id);
+  selectedAlarmIds = selectedRows.map(alarm => alarm.id);
+  hasAlarmSelected.value = selectedAlarmIds.length > 0;
+  console.log("onSelectionChanged: " + selectedAlarmIds)
+  console.log("hasAlarmSelected = " + hasAlarmSelected.value)
+}
+
+function submit() {
   console.log("submitting: " + currentAlarmOption.value)
   console.log("selectedAlarmIds :  " + selectedAlarmIds)
   let alarmQueryParameters: AlarmQueryParameters;
@@ -117,6 +131,12 @@ function submit() {
   selectedAlarmIds.forEach((alarmId: string) => store.dispatch("mapModule/modifyAlarm", {
     pathVariable: alarmId, queryParameters: alarmQueryParameters
   }))
+  GStore.flashMessage = currentAlarmOption.value + ' success.'
+
+
+  setTimeout(() => {
+    GStore.flashMessage = ''
+  }, 3000)
 }
 
 function clearFilters() {
@@ -227,6 +247,20 @@ const columnDefs = ref([
 </script>
 
 <style scoped>
+@keyframes yellowfade {
+  from {
+    background: yellow;
+  }
+  to {
+    background: transparent;
+  }
+}
+
+#flashMessage {
+  animation-name: yellowfade;
+  animation-duration: 3s;
+  text-align: center;
+}
 .button-group {
   width: 100%;
   height: 25px;
