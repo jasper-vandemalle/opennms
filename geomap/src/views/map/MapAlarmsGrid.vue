@@ -3,7 +3,12 @@
   <div class="map-alarms">
     <div class="button-group">
       <span class="map-alarm-buttons">
-        <select name="alarmOptions" id="alarmOptions" v-model="currentAlarmOption" :disabled="!hasAlarmSelected">
+        <select
+          name="alarmOptions"
+          id="alarmOptions"
+          v-model="currentAlarmOption"
+          :disabled="!hasAlarmSelected"
+        >
           <option v-for="option in alarmOptions" :value="option" :key="option">{{ option }}</option>
         </select>
         <button type="button" :disabled="!hasAlarmSelected" @click="submit()">Submit</button>
@@ -14,7 +19,7 @@
     </div>
     <div class="map-alarms-grid">
       <ag-grid-vue
-        style="width: 100%; height: 700px"
+        style="width: 100%; height: 600px"
         class="ag-theme-alpine"
         rowSelection="multiple"
         @grid-ready="onGridReady"
@@ -128,14 +133,27 @@ function submit() {
       break;
   }
 
-  selectedAlarmIds.forEach((alarmId: string) => store.dispatch("mapModule/modifyAlarm", {
-    pathVariable: alarmId, queryParameters: alarmQueryParameters
-  }))
+  let numFail = 0;
+  let respCollection = [];
+  selectedAlarmIds.forEach((alarmId: string) => {
+    let resp = store.dispatch("mapModule/modifyAlarm", {
+      pathVariable: alarmId, queryParameters: alarmQueryParameters
+    })
+    respCollection.push(resp)
+  })
+  Promise.all(respCollection).then(function (result) {
+    result.forEach(r => {
+      if (r == false) {
+        numFail = numFail + 1;
+      }
+    })
+    GStore.flashMessage = (selectedAlarmIds.length - numFail) + " success, " + numFail + ' failed.'
 
-  GStore.flashMessage = currentAlarmOption.value + ' success.'
-  setTimeout(() => {
-    GStore.flashMessage = ''
-  }, 3000)
+    setTimeout(() => {
+      GStore.flashMessage = ''
+      window.location.reload()
+    }, 3000)  
+  })
 }
 
 function clearFilters() {
@@ -246,9 +264,9 @@ const columnDefs = ref([
 </script>
 
 <style scoped>
-@keyframes yellowfade {
+@keyframes bluefade {
   from {
-    background: yellow;
+    background: rgb(104, 150, 236);
   }
   to {
     background: transparent;
@@ -256,7 +274,7 @@ const columnDefs = ref([
 }
 
 #flashMessage {
-  animation-name: yellowfade;
+  animation-name: bluefade;
   animation-duration: 3s;
   text-align: center;
 }
