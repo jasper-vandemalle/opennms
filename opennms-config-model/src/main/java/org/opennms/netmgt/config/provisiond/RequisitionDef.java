@@ -44,6 +44,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.opennms.core.xml.ValidateUsing;
 import org.opennms.netmgt.config.utils.ConfigUtils;
 
+import com.google.common.base.MoreObjects;
+
 /**
  * Defines an import job with a cron expression
  *  
@@ -135,4 +137,13 @@ public class RequisitionDef implements Serializable {
         return false;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("importUrlResource", m_importUrlResource)
+                .add("importName", m_importName)
+                .add("rescanExisting", m_rescanExisting)
+                .add("cronSchedule", m_cronSchedule)
+                .toString();
+    }
 }
