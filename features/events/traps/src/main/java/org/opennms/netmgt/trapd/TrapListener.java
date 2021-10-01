@@ -28,6 +28,7 @@
 
 package org.opennms.netmgt.trapd;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.InetAddress;
@@ -36,6 +37,7 @@ import java.util.Objects;
 
 import org.opennms.core.ipc.sink.api.AsyncDispatcher;
 import org.opennms.core.ipc.sink.api.MessageDispatcherFactory;
+import org.opennms.core.ipc.twin.api.TwinSubscriber;
 import org.opennms.core.logging.Logging;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.config.TrapdConfig;
@@ -64,6 +66,11 @@ public class TrapListener implements TrapNotificationListener {
     private TrapdConfig m_config;
 
     private AsyncDispatcher<TrapInformationWrapper> m_dispatcher;
+
+    @Autowired
+    private TwinSubscriber m_twinSubscriber;
+
+    private Closeable m_twinSubscription;
 
     public TrapListener(final TrapdConfig config) throws SocketException {
         Objects.requireNonNull(config, "Config cannot be null");
@@ -94,11 +101,19 @@ public class TrapListener implements TrapNotificationListener {
     }
 
     public void start() {
+        m_twinSubscription = m_twinSubscriber.subscribe(TrapListenerConfig.TWIN_KEY, TrapListenerConfig.class, (config) ->  {
+            LOG.debug("Got listener config update - reloading");
+            this.close();
+            this.open(config);
+        });
+    }
+
+    private void open(final TrapListenerConfig config) {
         final int m_snmpTrapPort = m_config.getSnmpTrapPort();
         final InetAddress address = getInetAddress();
         try {
             LOG.info("Listening on {}:{}", address == null ? "[all interfaces]" : InetAddressUtils.str(address), m_snmpTrapPort);
-            SnmpUtils.registerForTraps(this, address, m_snmpTrapPort, m_config.getSnmpV3Users());
+            SnmpUtils.registerForTraps(this, address, m_snmpTrapPort, config.getSnmpV3Users());
             m_registeredForTraps = true;
             
             LOG.debug("init: Creating the trap session");
@@ -121,24 +136,37 @@ public class TrapListener implements TrapNotificationListener {
 
     public void stop() {
         try {
+            m_twinSubscription.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        this.close();
+
+        try {
+            if (m_dispatcher != null) {
+                m_dispatcher.close();
+                m_dispatcher = null;
+            }
+        } catch (final Exception e) {
+            LOG.warn("stop: exception occurred closing m_dispatcher", e);
+        }
+    }
+
+    private void close() {
+        try {
             if (m_registeredForTraps) {
                 LOG.debug("stop: Closing SNMP trap session.");
-                SnmpUtils.unregisterForTraps(this, getInetAddress(), m_config.getSnmpTrapPort());
+                SnmpUtils.unregisterForTraps(this);
                 m_registeredForTraps = false;
                 LOG.debug("stop: SNMP trap session closed.");
             } else {
                 LOG.debug("stop: not attemping to closing SNMP trap session--it was never opened or already closed.");
             }
-            if (m_dispatcher != null) {
-                m_dispatcher.close();
-                m_dispatcher = null;
-            }
         } catch (final IOException e) {
             LOG.warn("stop: exception occurred closing session", e);
         } catch (final IllegalStateException e) {
             LOG.debug("stop: The SNMP session was already closed", e);
-        } catch (final Exception e) {
-            LOG.warn("stop: exception occured closing m_dispatcher", e);
         }
     }
 
@@ -146,15 +174,6 @@ public class TrapListener implements TrapNotificationListener {
         TrapdConfigBean newTrapdConfigBean = new TrapdConfigBean(newTrapdConfig);
         if (hasConfigurationChanged(newTrapdConfigBean)) {
             restartWithNewConfig(newTrapdConfigBean);
-        }
-    }
-
-    public void setSnmpV3Users(final TrapdConfiguration newTrapdConfig) {
-        TrapdConfigBean newTrapdConfigBean = new TrapdConfigBean(newTrapdConfig);
-        if (hasSnmpV3UsersChanged(newTrapdConfigBean)) {
-            TrapdConfigBean clone = new TrapdConfigBean(m_config);
-            clone.setSnmpV3Users(newTrapdConfigBean.getSnmpV3Users());
-            restartWithNewConfig(clone);
         }
     }
 
@@ -166,13 +185,21 @@ public class TrapListener implements TrapNotificationListener {
         m_distPollerDao = Objects.requireNonNull(distPollerDao);
     }
 
+    public TwinSubscriber getTwinSubscriber() {
+        return this.m_twinSubscriber;
+    }
+
+    public void setTwinSubscriber(final TwinSubscriber twinSubscriber) {
+        this.m_twinSubscriber = Objects.requireNonNull(twinSubscriber);
+    }
+
     private void restartWithNewConfig(final TrapdConfigBean newConfig) {
         // We stop, still using old config
         LOG.info("Stopping TrapListener service to reload configuration...");
         stop();
         LOG.info("TrapListener service has been stopped.");
 
-        // Update config, instead of set it, to apply the chnages to ALL config references
+        // Update config, instead of set it, to apply the changes to ALL config references
         m_config.update(newConfig);
 
         // We start with new config

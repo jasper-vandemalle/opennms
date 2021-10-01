@@ -30,7 +30,10 @@ package org.opennms.netmgt.trapd;
 
 import java.io.IOException;
 
+import org.opennms.core.ipc.twin.api.TwinPublisher;
 import org.opennms.core.spring.BeanUtils;
+import org.opennms.netmgt.config.TrapdConfig;
+import org.opennms.netmgt.config.TrapdConfigFactory;
 import org.opennms.netmgt.daemon.AbstractServiceDaemon;
 import org.opennms.netmgt.daemon.DaemonTools;
 import org.opennms.netmgt.events.api.EventConstants;
@@ -84,6 +87,13 @@ public class Trapd extends AbstractServiceDaemon {
     @Autowired
     private TrapListener m_trapListener;
 
+    private TrapdConfig m_config;
+
+    @Autowired
+    private TwinPublisher m_twinPublisher;
+
+    private TwinPublisher.Session<TrapListenerConfig> m_twinSession;
+
     /**
      * <P>
      * Constructs a new Trapd object that receives and forwards trap messages
@@ -96,6 +106,8 @@ public class Trapd extends AbstractServiceDaemon {
      */
     public Trapd() {
         super(LOG4J_CATEGORY);
+
+        m_config = TrapdConfigFactory.getInstance();
     }
 
 
@@ -105,6 +117,14 @@ public class Trapd extends AbstractServiceDaemon {
     @Override
     protected synchronized void onInit() {
         BeanUtils.assertAutowiring(this);
+
+        try {
+            m_twinSession = m_twinPublisher.register(TrapListenerConfig.TWIN_KEY, TrapListenerConfig.class, null);
+            m_twinSession.publish(TrapListenerConfig.from(m_config));
+        } catch (IOException e) {
+            LOG.error("Failed to register twin for trap listener config", e);
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -202,12 +222,21 @@ public class Trapd extends AbstractServiceDaemon {
 
     private void handleConfigurationChanged() {
         stop();
+
         try {
             m_trapListener.reload();
+
+            publishListenerConfig();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
         start();
+    }
+
+    public void publishListenerConfig() throws IOException {
+        m_config = TrapdConfigFactory.getInstance();
+        m_twinSession.publish(TrapListenerConfig.from(m_config));
     }
 
     public static String getLoggingCategory() {
