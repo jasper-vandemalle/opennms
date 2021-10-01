@@ -43,8 +43,15 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class Health {
 
-    private List<Pair<HealthCheck, Response>> responses = new ArrayList<>();
-    private String errorMessage;
+    private final List<Pair<HealthCheck, Response>> responses;
+
+    public Health() {
+        responses = new ArrayList<>();
+    }
+
+    public Health(List<Pair<HealthCheck, Response>> responses) {
+        this.responses = responses;
+    }
 
     public Health withResponse(HealthCheck healthCheck, Response response) {
         add(healthCheck, response);
@@ -52,9 +59,6 @@ public class Health {
     }
 
     public boolean isSuccess() {
-        if (responses.isEmpty() && errorMessage != null) {
-            return false;
-        }
         return responses.stream().allMatch(r -> r.getRight().getStatus() == Status.Success);
     }
 
@@ -66,14 +70,6 @@ public class Health {
 
     public void add(HealthCheck healthCheck, Response response) {
         this.responses.add(Pair.of(healthCheck, response));
-    }
-
-    public void setError(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
     }
 
     public List<Pair<HealthCheck, Response>> getResponses() {

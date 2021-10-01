@@ -28,6 +28,7 @@
 
 package org.opennms.core.health.impl;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -35,13 +36,9 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.opennms.core.health.api.Context;
 import org.opennms.core.health.api.Health;
 import org.opennms.core.health.api.HealthCheck;
@@ -56,6 +53,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import io.vavr.control.Either;
 
 /**
  * The "Default" implementation of the {@link HealthCheckService}.
@@ -87,73 +86,64 @@ public class DefaultHealthCheckService implements HealthCheckService {
     }
 
     @Override
-    public CompletableFuture<Health> performAsyncHealthCheck(Context context, Consumer<HealthCheck> onStartConsumer, BiConsumer<HealthCheck, Response> onFinishConsumer, List<String> tags) {
-        final CompletableFuture<Health> returnFuture = new CompletableFuture<>();
-        final Health health = new Health();
-        final BiConsumer<HealthCheck, Response> consumer = (healthCheck, response) -> {
-            health.withResponse(healthCheck, response);
-            onFinishConsumer.accept(healthCheck, response);
-        };
+    public Either<String, CompletableFuture<Health>> performAsyncHealthCheck(Context context, ProgressListener listener, List<String> tags) {
         try {
             // Fail if no checks are available
             List<HealthCheck> checks = getHealthChecks();
             checks = filterChecksWithTags(checks, tags);
             if (checks == null || checks.isEmpty()) {
-                health.setError("No Health Checks available");
+                return Either.left("No Health Checks available");
             } else {
-                runChecks(context, checks, onStartConsumer, consumer);
+                if (listener != null) {
+                    listener.onHealthChecksFound(checks);
+                }
+                return Either.right(runChecks(context, checks, listener));
             }
         } catch (InvalidSyntaxException ex) {
-            health.setError("Error while performing health checks: " + ex.getMessage());
-        } finally {
-            returnFuture.complete(health);
+            return Either.left("Error while performing health checks: " + ex.getMessage());
         }
-        return returnFuture;
     }
 
-    List<HealthCheck> filterChecksWithTags(List<HealthCheck> checks, List<String> tags){
-        if (checks != null && tags != null && tags.stream().anyMatch(tag -> !Strings.isNullOrEmpty(tag))){
+    List<HealthCheck> filterChecksWithTags(List<HealthCheck> checks, List<String> tags) {
+        if (checks != null && tags != null && tags.stream().anyMatch(tag -> !Strings.isNullOrEmpty(tag))) {
             checks = checks.stream().filter(check -> check.getTags().stream().anyMatch(tags::contains)).collect(Collectors.toList());
         }
         return checks;
     }
 
-    // Asynchronously run all checks
-    private void runChecks(Context context, List<HealthCheck> checks, Consumer<HealthCheck> onStartConsumer, BiConsumer<HealthCheck, Response> onFinishConsumer) {
-        Future<Response> currentFuture = null;
-        for (HealthCheck check : checks) {
-            try {
-                if (onStartConsumer != null) {
-                    onStartConsumer.accept(check);
-                }
-                currentFuture = executorService.submit(() -> {
+    /**
+     * Creates a completable future for the given health check.
+     * <p>
+     * The returned future is guaranteed to complete with-in the timeout given in the context instance.
+     */
+    private CompletableFuture<Pair<HealthCheck, Response>> completableFuture(HealthCheck check, Context context, ProgressListener listener) {
+        return FutureUtils.completableFutureWithDefaultOnTimeout(
+                () -> {
                     try {
-                        final Response response = check.perform(context);
-                        if (response == null) {
-                            return new Response(Status.Unknown);
-                        }
-                        return response;
-                    } catch (Exception ex) {
-                        // Log the stack trace
-                        LOG.warn("Health check {} failed with exception: {}", check, ex.getMessage(), ex);
-                        return new Response(ex);
+                        return check.perform(context);
+                    } catch (Throwable t) {
+                        return new Response(t);
                     }
-                });
-                final Response response = currentFuture.get(context.getTimeout(), TimeUnit.MILLISECONDS);
-                if (onFinishConsumer != null) {
-                    onFinishConsumer.accept(check, response);
-                }
-            } catch (TimeoutException timeoutException) {
-                if (currentFuture != null) {
-                    currentFuture.cancel(true);
-                }
-                onFinishConsumer.accept(check, new Response(Status.Timeout, "Health Check did not finish within " + context.getTimeout() + " ms"));
-            } catch (Exception ex) {
-                if (currentFuture != null) {
-                    currentFuture.cancel(true);
-                }
-                onFinishConsumer.accept(check, new Response(ex));
+                },
+                Duration.ofMillis(context.getTimeout()),
+                () -> new Response(Status.Timeout, "Health Check did not finish within " + context.getTimeout() + " ms"),
+                executorService
+        ).thenApply(response -> {
+            if (listener != null) {
+                listener.onResponse(check, response);
             }
-        }
+            return Pair.of(check, response);
+        });
+    }
+
+    // Asynchronously run all checks
+    private CompletableFuture<Health> runChecks(Context context, List<HealthCheck> checks, ProgressListener listener) {
+        return FutureUtils.traverse(checks, check -> completableFuture(check, context, listener)).thenApply(list -> {
+            var health = new Health(list);
+            if (listener != null) {
+                listener.onAllHealthChecksCompleted(health);
+            }
+            return health;
+        });
     }
 }

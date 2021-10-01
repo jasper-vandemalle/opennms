@@ -30,11 +30,10 @@ package org.opennms.core.health.shell;
 
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import org.apache.karaf.shell.api.action.Action;
 import org.apache.karaf.shell.api.action.Command;
@@ -45,10 +44,9 @@ import org.opennms.core.health.api.Context;
 import org.opennms.core.health.api.Health;
 import org.opennms.core.health.api.HealthCheck;
 import org.opennms.core.health.api.HealthCheckService;
+import org.opennms.core.health.api.Response;
 import org.opennms.core.health.api.Status;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 
 @Command(scope = "opennms", name = "health-check", description="Verifies that the container is healthy.")
 @Service
@@ -79,48 +77,21 @@ public class HealthCheckCommand implements Action {
         final Context context = new Context();
         context.setTimeout(timeout);
         context.setMaxAge(Duration.ofMillis(maxAgeMs));
-        final CompletableFuture<Health> future = performHealthCheck(bundleContext, context);
-        final Health health = future.get();
 
-        // Print results
-        System.out.println();
-        if (health.isSuccess()) {
-            System.out.println("=> Everything is awesome");
-        } else {
-            if (health.getErrorMessage() != null) {
-                System.out.println(Colorizer.colorize("Error: " +  health.getErrorMessage(), Color.Red));
-            }
-            System.out.println("=> Oh no, something is wrong");
-        }
+        healthCheckService.performAsyncHealthCheck(context, new Lister(), null).fold(
+                errorMessage -> {
+                    System.out.println(Colorizer.colorize("Error: " + errorMessage, Color.Red));
+                    System.out.println("=> Oh no, something is wrong");
+                    return null;
+                },
+                future -> {
+                    try {
+                        return future.get();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
         return null;
-    }
-
-    private CompletableFuture<Health> performHealthCheck(BundleContext bundleContext, Context context) throws InvalidSyntaxException {
-        // Determine attributes (e.g. max length) for visualization
-        final Collection<ServiceReference<HealthCheck>> serviceReferences = bundleContext.getServiceReferences(HealthCheck.class, null);
-        final List<HealthCheck> healthChecks = serviceReferences.stream().map(s -> bundleContext.getService(s)).collect(Collectors.toList());
-        final int maxColorLength = Arrays.stream(Color.values()).map(c -> c.toAnsi()).max(Comparator.comparingInt(String::length)).get().length();
-        final int maxDescriptionLength = healthChecks.stream().map(check -> check.getDescription()).max(Comparator.comparingInt(String::length)).orElse("").length();
-        final int maxStatusLength = Arrays.stream(Status.values()).map(v -> v.name()).max(Comparator.comparingInt(String::length)).get().length() + maxColorLength + "\033[m".length() * 2 + Color.NoColor.toAnsi().length();
-        final String descFormat = String.format(DESCRIPTION_FORMAT, maxDescriptionLength);
-        final String statusFormat = String.format(STATUS_FORMAT, maxStatusLength);
-
-        // Run Health Checks
-        final CompletableFuture<Health> future = healthCheckService
-                .performAsyncHealthCheck(context,
-                        healthCheck -> System.out.print(String.format(descFormat, healthCheck.getDescription())),
-                        (healthCheck, response) -> {
-                            final Status status = response.getStatus();
-                            final Color statusColor = determineColor(status);
-                            final String statusText = String.format(statusFormat, Colorizer.colorize(status.name(), statusColor));
-                            System.out.print(statusText);
-                            if (response.getMessage() != null) {
-                                System.out.print(" => " + response.getMessage());
-                            }
-                            System.out.println();
-                        },
-                        null);
-        return future;
     }
 
     private static Color determineColor(Status status) {
@@ -131,6 +102,60 @@ public class HealthCheckCommand implements Action {
             case Success: return Color.Green;
             case Unknown: return Color.Yellow;
             default:      return Color.NoColor;
+        }
+    }
+
+    private static class Lister implements HealthCheckService.ProgressListener {
+
+        private List<HealthCheck> checks;
+        private String descFormat, statusFormat;
+        private Map<HealthCheck, Response> responses = new IdentityHashMap<>();
+
+        @Override
+        public synchronized void onHealthChecksFound(List<HealthCheck> healthChecks) {
+            this.checks = healthChecks;
+            final int maxColorLength = Arrays.stream(Color.values()).map(c -> c.toAnsi()).max(Comparator.comparingInt(String::length)).get().length();
+            final int maxDescriptionLength = healthChecks.stream().map(check -> check.getDescription()).max(Comparator.comparingInt(String::length)).orElse("").length();
+            final int maxStatusLength = Arrays.stream(Status.values()).map(v -> v.name()).max(Comparator.comparingInt(String::length)).get().length() + maxColorLength + "\033[m".length() * 2 + Color.NoColor.toAnsi().length();
+            descFormat = String.format(DESCRIPTION_FORMAT, maxDescriptionLength);
+            statusFormat = String.format(STATUS_FORMAT, maxStatusLength);
+            print();
+        }
+
+        @Override
+        public synchronized void onResponse(HealthCheck check, Response response) {
+            responses.put(check, response);
+            System.out.print(String.format("\033[%dA", checks.size())); // move up
+            print();
+        }
+
+        @Override
+        public synchronized void onAllHealthChecksCompleted(Health health) {
+            System.out.println();
+            if (health.isSuccess()) {
+                System.out.println("=> Everything is awesome");
+            } else {
+                System.out.println("=> Oh no, something is wrong");
+            }
+        }
+
+        private void print() {
+            for (var healthCheck : checks) {
+                System.out.print(String.format(descFormat, healthCheck.getDescription()));
+                var response = responses.get(healthCheck);
+                if (response != null) {
+                    final Status status = response.getStatus();
+                    final Color statusColor = determineColor(status);
+                    final String statusText = String.format(statusFormat, Colorizer.colorize(status.name(), statusColor));
+                    System.out.print(statusText);
+                    if (response.getMessage() != null) {
+                        System.out.print(" => " + response.getMessage());
+                    }
+                } else {
+                    System.out.print("[ ]");
+                }
+                System.out.println();
+            }
         }
     }
 }
